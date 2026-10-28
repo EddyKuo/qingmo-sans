@@ -21,6 +21,17 @@ the OFL, no Qingmo font name contains the Reserved Font Name.
 ChangeLog
 ---------
 
+2026-10-28 (Qingmo Sans Project) Version 0.003
+- Stroke templates on Han ideographs: dot (pointed top, rounded bottom),
+  na (short platform then exit), pie (tip narrowed to 55%, min 22 units)
+- Charset: added the Windows zh-TW font preview sample 微風迎客，軟語伴茶
+  (337 Han characters); before this only 風 was covered, so the preview
+  mixed Qingmo with a fallback font
+- Fixes: hollow-box sides no longer treated as stroke ends; collinear points
+  follow locked stroke moves; folded-back spurs of the base at wght 250
+  collapsed before transforming; no new self-intersections at any weight
+- New QA gate: qa/regressions.py (masters and interpolated weights)
+
 2026-10-28 (Qingmo Sans Project) Version 0.002
 - Phase 1 PoC: ~330 Han characters (config/charsets/phase1.txt)
 - Base pinned: Source Han Sans TW-subset VF 2.005 (TrueType), commit a4f7cf9,
@@ -34,7 +45,7 @@ ChangeLog
 - Fixed base contour direction on 7 glyphs (brackets, bopomofo)
 - Added U+00A0, unhinted prep/gasp, static instances with overlaps removed,
   WOFF2
-- Not yet done: dot / na / pie stroke templates
+- Stroke templates were added in 0.003
 
 2026-10-28 (Qingmo Sans Project) Version 0.001
 - Phase 0: Design Spec v0, repo skeleton, clean-room policy, build pipeline

@@ -157,3 +157,21 @@ def stem_pairs(points: list[Point], end_pts: list[int], flags: list[int], max_st
         if best:
             pairs.append((e, best[1]))
     return pairs
+
+
+def propagate(locked: dict[int, float], ref: list[Point], end_pts: list[int], flags: list[int],
+              coord: int) -> dict[int, float]:
+    """把鎖定點的位移沿「同一條水平 / 垂直線」擴散到相連的點（coord 0 = x、1 = y）。
+
+    與鎖定點在 coord 上相差 <= FLAT 的相鄰點（含 off-curve 切線點）用同樣的位移，
+    避免共線的短邊或幾乎重合的點被拆開而自交（例：不、進 的轉折處）。
+    """
+    out = dict(locked)
+    stack = list(locked)
+    while stack:
+        i = stack.pop()
+        for n in neighbours(end_pts, i):
+            if n not in out and abs(ref[n][coord] - ref[i][coord]) <= FLAT:
+                out[n] = out[i]
+                stack.append(n)
+    return out

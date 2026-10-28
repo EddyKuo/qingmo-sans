@@ -3,12 +3,12 @@
 - 在參考 master（ctx["ref"]，預設 wght 400）上找出水平直線邊，依填色側分成「上緣」（填色在下）
   與「下緣」（填色在上），每條邊配對 x 重疊、距離最近、且中間為填色的相反類型邊 = 一個橫畫
 - 橫畫寬 d 在當前 master 上量，兩緣各向內移動 (1 - ratio) * d / 2，點數不變
-- 與水平邊相切的 off-curve 點跟著移動，曲線切線保持水平
+- 與移動邊共線相連的點（含切線 off-curve）跟著移動，曲線切線保持水平、短邊不被拆開
 - 只處理「長橫」：重疊長度 >= 1.2 * d，且 d <= MAX_STEM；新寬度不小於 MIN_WIDTH
 """
 from __future__ import annotations
 
-from geometry import FLAT, neighbours, stem_pairs
+from geometry import propagate, stem_pairs
 
 MAX_STEM = 0.16      # × UPM，參考 master 上視為筆畫的最大寬度
 MIN_WIDTH = 0.012    # × UPM，變細後的下限
@@ -30,12 +30,8 @@ def transform(glyph_name, points, end_pts, flags, params, wght, ctx):
             shifts.setdefault(i, []).append(dy)
 
     out = list(points)
-    moved = {i: sum(v) / len(v) for i, v in shifts.items()}
+    moved = propagate({i: sum(v) / len(v) for i, v in shifts.items()}, ref, end_pts, flags, 1)
     for i, dy in moved.items():
         x, y = out[i]
         out[i] = (x, y + dy)
-        for n in neighbours(end_pts, i):
-            if not flags[n] & 1 and n not in moved and abs(ref[n][1] - ref[i][1]) <= FLAT:
-                nx, ny = out[n]
-                out[n] = (nx, ny + dy)
     return out

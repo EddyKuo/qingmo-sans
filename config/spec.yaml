@@ -5,7 +5,7 @@ family:
   zh: 晴墨黑體
   en: Qingmo Sans TC
   ps_prefix: QingmoSansTC
-  version: "0.002"
+  version: "0.003"
   vendor: QMSP            # TODO: 4 字元 vendor ID，發布前向 Microsoft 註冊
   repo: https://github.com/EddyKuo/qingmo-sans
 
@@ -47,10 +47,17 @@ style:
   entry_cut_deg: 12             # 起筆斜切角
   exit_taper_pct: 8             # 收筆微收
   corner_radius_units: 6        # 折角軟化半徑（UPM 1000），隨字重縮放
+  # 筆畫模板（strokes.py）
+  pie_tip_pct: 55               # 撇：出鋒端寬度縮為原本的 55%
+  pie_min_width: 22             # 撇：出鋒端最小寬度（UPM 1000），末端不留尖刺
+  na_tip_out_pct: 35            # 捺：尖端外移（× 端寬）
+  na_tip_rise_pct: 15           # 捺：尖端高於平台（× 端寬）
+  dot_tip_pct: 25               # 點：上端收尖，寬度縮為 25%
+  dot_round_pct: 60             # 點：下端圓頭凸出（× 端寬）
 
 # 依序套用的幾何改造（只作用於 CJK 統一漢字）。point transform 不得改變點數；
-# structural transform（corners）在所有 master 做相同的結構變更，且必須排在最後
-transforms: [proportion, contrast, terminals, corners]
+# structural transform（strokes、corners）在所有 master 做相同的結構變更，且必須排在所有 point transform 之後
+transforms: [proportion, contrast, terminals, strokes, corners]
 
 qa:
   forbidden_name_terms: [Source]

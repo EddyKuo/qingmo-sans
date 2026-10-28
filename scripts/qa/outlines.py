@@ -18,6 +18,9 @@ from fontTools.pens.recordingPen import RecordingPen
 from fontTools.ttLib import TTFont
 
 TOL = 2.0  # font units²，量化誤差容忍
+# 殘留 overlap 的容忍：removeOverlaps 後座標取整數會留下次像素細縫（或、新 約 2–3 units²，
+# 整字面積 30 萬以上）。取 TOL 與整字面積 0.002% 的較大者
+OVERLAP_REL = 2e-5
 
 
 def contours(glyphset, name):
@@ -62,7 +65,7 @@ def check_font(path: pathlib.Path, no_overlap: bool) -> list[str]:
             for ops in cs:
                 whole.addPath(to_path(ops))
             union = pathops.simplify(whole, clockwise=True)
-            if abs(abs(union.area) - abs(area.value)) > TOL:
+            if abs(abs(union.area) - abs(area.value)) > max(TOL, OVERLAP_REL * abs(area.value)):
                 problems.append(f"{name}: residual overlap")
     return problems
 

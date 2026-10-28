@@ -1,7 +1,7 @@
 """筆端：起筆斜切、收筆微收（spec: style.entry_cut_deg / exit_taper_pct）。
 
 在參考 master 上找筆畫端緣：一條短直線邊，兩端都以直角接上與它垂直、長度 >= 1.5 倍端緣的直線邊，
-且端緣不被其他輪廓蓋住（藏在豎畫裡的橫畫末端不算筆端）。
+且端緣不被其他輪廓蓋住（藏在豎畫裡的橫畫末端不算筆端），往內 1.5 倍筆寬仍是填色（排除空心框的側邊）。
 - 橫畫左端（填色在右）= 起筆：下角向右移 w * tan(entry_cut_deg)，端緣成「\\」向斜切
 - 豎畫上端（填色在下）= 起筆：右角向下移 w * tan(entry_cut_deg)
 - 橫畫右端、豎畫下端 = 收筆：端緣兩點各向中線收 exit_taper_pct / 2，總寬縮 exit_taper_pct
@@ -55,10 +55,17 @@ def stroke_ends(points, end_pts, flags, upm):
             continue                      # 端點藏在其他筆畫裡，不是看得見的筆端
         if axis == "v":
             fill_right = inside_own(points, end_pts, flags, i, (mx + 2, my))
-            ends.append(("h_entry" if fill_right else "h_exit", i, j))
+            step = (1, 0) if fill_right else (-1, 0)
+            kind = "h_entry" if fill_right else "h_exit"
         else:
             fill_below = inside_own(points, end_pts, flags, i, (mx, my - 2))
-            ends.append(("v_entry" if fill_below else "v_exit", i, j))
+            step = (0, -1) if fill_below else (0, 1)
+            kind = "v_entry" if fill_below else "v_exit"
+        # 真正的筆端往內走 0.5w、w、1.5w 都還在筆畫裡；空心框（民、高的口）的側邊往內是洞
+        if not all(inside(points, end_pts, flags, (mx + step[0] * w * f, my + step[1] * w * f))
+                   for f in (0.5, 1.0, 1.5)):
+            continue
+        ends.append((kind, i, j))
     return ends
 
 
