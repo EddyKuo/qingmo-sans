@@ -1,0 +1,35 @@
+FONTLOG for Qingmo Sans TC (晴墨黑體)
+=====================================
+
+This file provides detailed information on the Qingmo Sans TC font software.
+This information should be distributed along with the font software and any
+derivative works.
+
+
+Basic Font Information
+----------------------
+
+Qingmo Sans TC is a Traditional Chinese text typeface that blends a sans-serif
+(hei) skeleton with the stroke rhythm of Ming (song) type. It is a derivative of
+Source Han Sans TC and is released under the SIL Open Font License, Version 1.1.
+
+Base font: Source Han Sans TC (Variable), Copyright 2014-2021 Adobe
+(http://www.adobe.com/), with Reserved Font Name 'Source'. In accordance with
+the OFL, no Qingmo font name contains the Reserved Font Name.
+
+
+ChangeLog
+---------
+
+2026-10-28 (Qingmo Sans Project) Version 0.001
+- Phase 0: Design Spec v0, repo skeleton, clean-room policy, build pipeline
+  (subset -> masters -> transforms -> compatibility gate -> VF -> QA)
+- No glyph changes yet: all transforms are identity stubs
+
+
+Acknowledgements
+----------------
+
+N: Adobe Type Team
+D: Source Han Sans (base font)
+W: https://github.com/adobe-fonts/source-han-sans

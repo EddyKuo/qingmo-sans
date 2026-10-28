@@ -1,0 +1,10 @@
+build/
+fonts/
+__pycache__/
+*.pyc
+.venv/
+.DS_Store
+# 第三方商用字型一律不得進入 repo（見 CLEANROOM.md）
+*.otf
+*.ttc
+*.otc

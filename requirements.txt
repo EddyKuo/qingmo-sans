@@ -1,0 +1,4 @@
+fonttools[unicode]>=4.60
+skia-pathops>=0.8
+PyYAML>=6.0
+# QA (optional): fontbakery
