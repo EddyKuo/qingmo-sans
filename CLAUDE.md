@@ -44,7 +44,9 @@ Windows 沒有 `make`：依 `Makefile` 順序直接執行 `.venv/Scripts/python 
 | 不新增自交（各 master 與中間字重） | `scripts/qa/regressions.py --vf "fonts/variable/QingmoSansTC[wght].ttf"` |
 | 名稱、字集、破字、灰度 | `make qa` |
 | 單元測試、smoke | `make test`、`make smoke` |
-| fontbakery（選用但目標 0 FAIL） | `fontbakery check-universal fonts/static/*.ttf` |
+| fontbakery（選用但目標 0 FAIL；static 與 VF 分開跑） | `fontbakery check-universal fonts/static/*.ttf` |
+
+人工抽檢校樣：`python scripts/qa/proof_sheet.py fonts/static/QingmoSansTC-Regular.ttf`（輸出到 `build/proof/`）。
 
 ## Clean-room（見 `CLEANROOM.md`）
 

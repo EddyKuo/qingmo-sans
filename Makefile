@@ -39,6 +39,7 @@ static: build
 qa:
 > $(PY) scripts/qa/check_names.py "$(VF)" $(STATICS)
 > $(PY) scripts/qa/coverage.py "$(VF)" --charset phase1
+> $(PY) scripts/qa/coverage.py "$(VF)" --charset highfreq500
 > $(PY) scripts/qa/regressions.py --vf "$(VF)"
 > $(PY) scripts/qa/outlines.py "$(VF)"
 > $(PY) scripts/qa/outlines.py --no-overlap $(STATICS)

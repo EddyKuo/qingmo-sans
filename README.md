@@ -2,7 +2,7 @@
 
 繁體中文「明黑混合」內文字型：黑體的骨架與清晰度，加上明體的書寫筆勢。以 [SIL OFL 1.1](OFL.txt) 免費開源，衍生自 Source Han Sans TC。
 
-> 狀態：**Phase 1**（PoC 字集 337 字）。設計規格見 [`docs/晴墨黑體 Design Spec v0.md`](docs/晴墨黑體%20Design%20Spec%20v0.md)，
+> 狀態：**Phase 1**（PoC 字集 549 字，含高頻 500 字）。設計規格見 [`docs/晴墨黑體 Design Spec v0.md`](docs/晴墨黑體%20Design%20Spec%20v0.md)，
 > 研究與建置過程見 [`docs/研究與建置紀錄.md`](docs/研究與建置紀錄.md)。
 
 ## 建置
@@ -50,21 +50,21 @@ fetch_base → subset(phase charset) → extract_masters(wght 250/400/900)
 
 | 檢查 | 腳本 | Phase 1 結果 |
 | --- | --- | --- |
-| 跨 master 點相容 | `scripts/check_compat.py` | 963 / 963 |
+| 跨 master 點相容 | `scripts/check_compat.py` | 1177 / 1177 |
 | 不新增自交（masters 與中間字重） | `scripts/qa/regressions.py` | 通過 |
 | `name` 不含 "Source" | `scripts/qa/check_names.py` | 通過 |
-| 字集覆蓋 | `scripts/qa/coverage.py` | 337 / 337 |
+| 字集覆蓋 | `scripts/qa/coverage.py` | 549 / 549（高頻 500 / 500） |
 | 破字 0（自交、方向、殘留 overlap） | `scripts/qa/outlines.py` | VF 與 6 個 static 通過 |
-| 灰度一致（std ≤ 母體 × 1.05） | `scripts/qa/gray.py` | 比值 0.97–0.99 |
+| 灰度一致（std ≤ 母體 × 1.05） | `scripts/qa/gray.py` | 比值 0.96–0.98 |
 | fontbakery check-universal | `fontbakery`（選用） | 0 FAIL |
-| 12 / 16 / 24 px 人工抽檢 | — | Claude 已目視校樣（見研究紀錄 §9），人工抽檢待執行 |
+| 12 / 16 / 24 px 人工抽檢高頻 500 字 | `scripts/qa/proof_sheet.py` 產生校樣 | Claude 已目視校樣（見研究紀錄 §9），人工抽檢待執行 |
 
 ## 目錄
 
 | 路徑 | 內容 |
 | --- | --- |
 | `config/spec.yaml` | 機器可讀的 Design Spec：命名、母體、軸、字重、風格參數、QA 門檻 |
-| `config/charsets/` | 各階段字集 |
+| `config/charsets/` | 各階段字集；`highfreq500.txt` 由 `scripts/charsets/highfreq.py` 從 Unihan 產生 |
 | `scripts/` | 建置腳本；`transform/` 是幾何改造，`qa/` 是驗收閘門 |
 | `tests/` | `test_transforms.py` 單元測試、`smoke_test.py` 端到端測試 |
 | `docs/` | Design Spec、研究與建置紀錄 |

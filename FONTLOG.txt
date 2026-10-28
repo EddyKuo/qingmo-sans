@@ -21,6 +21,12 @@ the OFL, no Qingmo font name contains the Reserved Font Name.
 ChangeLog
 ---------
 
+2026-10-28 (Qingmo Sans Project) Version 0.004
+- Charset: high-frequency 500 list (config/charsets/highfreq500.txt, built
+  from Unicode Unihan kHanyuPinlu by scripts/charsets/highfreq.py) merged into
+  phase1; 549 Han characters, all passing every QA gate
+- Added scripts/qa/proof_sheet.py for the 12/16/24 px review sheets
+
 2026-10-28 (Qingmo Sans Project) Version 0.003
 - Stroke templates on Han ideographs: dot (pointed top, rounded bottom),
   na (short platform then exit), pie (tip narrowed to 55%, min 22 units)
