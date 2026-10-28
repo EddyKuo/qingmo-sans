@@ -21,6 +21,47 @@ the OFL, no Qingmo font name contains the Reserved Font Name.
 ChangeLog
 ---------
 
+2026-10-28 (Qingmo Sans Project) Version 0.100
+- Full character set: all 17,760 Han characters of the base (Big5 13,064 plus
+  HK, Ext-A and SIP characters); 18,343 glyphs
+- Safety net in the transform pipeline: a transform that errors or adds a
+  self-intersection at any master or interpolated weight is skipped for that
+  glyph only (109 of 17,684 glyphs, listed in transform-report.json)
+- Static build settles removeOverlaps rounding artefacts (slivers, pinches,
+  degenerate tiny curves) until the outline QA is clean
+
+2026-10-28 (Qingmo Sans Project) Version 0.004
+- Charset: high-frequency 500 list (config/charsets/highfreq500.txt, built
+  from Unicode Unihan kHanyuPinlu by scripts/charsets/highfreq.py) merged into
+  phase1; 549 Han characters, all passing every QA gate
+- Added scripts/qa/proof_sheet.py for the 12/16/24 px review sheets
+
+2026-10-28 (Qingmo Sans Project) Version 0.003
+- Stroke templates on Han ideographs: dot (pointed top, rounded bottom),
+  na (short platform then exit), pie (tip narrowed to 55%, min 22 units)
+- Charset: added the Windows zh-TW font preview sample 微風迎客，軟語伴茶
+  (337 Han characters); before this only 風 was covered, so the preview
+  mixed Qingmo with a fallback font
+- Fixes: hollow-box sides no longer treated as stroke ends; collinear points
+  follow locked stroke moves; folded-back spurs of the base at wght 250
+  collapsed before transforming; no new self-intersections at any weight
+- New QA gate: qa/regressions.py (masters and interpolated weights)
+
+2026-10-28 (Qingmo Sans Project) Version 0.002
+- Phase 1 PoC: ~330 Han characters (config/charsets/phase1.txt)
+- Base pinned: Source Han Sans TW-subset VF 2.005 (TrueType), commit a4f7cf9,
+  sha256 recorded in config/spec.yaml
+- Base wght range is 250..900, so masters are 250/400/900 and ExtraLight sits
+  at 250 instead of 200; the base avar weight curve is carried into the VF
+- Transforms on Han ideographs (Regular values, scaled per weight):
+  proportion (counter +3%, centre lift <= 0.5%, stroke widths kept),
+  contrast (horizontal:vertical = 82:100), terminals (12 deg entry cut,
+  8% exit taper on visible stroke ends), corners (r = 6 outer-corner rounding)
+- Fixed base contour direction on 7 glyphs (brackets, bopomofo)
+- Added U+00A0, unhinted prep/gasp, static instances with overlaps removed,
+  WOFF2
+- Stroke templates were added in 0.003
+
 2026-10-28 (Qingmo Sans Project) Version 0.001
 - Phase 0: Design Spec v0, repo skeleton, clean-room policy, build pipeline
   (subset -> masters -> transforms -> compatibility gate -> VF -> QA)

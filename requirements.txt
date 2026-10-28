@@ -1,4 +1,6 @@
 fonttools[unicode]>=4.60
 skia-pathops>=0.8
 PyYAML>=6.0
+brotli>=1.1          # WOFF2
+freetype-py>=2.5     # QA: scripts/qa/gray.py
 # QA (optional): fontbakery

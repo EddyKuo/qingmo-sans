@@ -1,0 +1,9 @@
+# fontbakery 專案設定：fontbakery check-universal --config config/fontbakery.yaml FONT...
+#
+# file_size：預設 1 MB 警告、9 MB 失敗，是為網頁拉丁字型設計的門檻。
+# 全字集中文 VF 無法低於 9 MB —— 母體 Source Han Sans TW VF 原檔即 11.9 MB，同樣判 FAIL。
+# 晴墨 VF 約 19.8 MB（多一個 wght 400 master 讓 gvar 由 1 個區段變 2 個，軟角與點的圓頭新增點），
+# static 約 9.2 MB。網頁請用 fonts/webfonts/ 的 WOFF2（VF 約 8.9 MB）或依頁面子集化。
+file_size:
+  WARN_SIZE: 12582912     # 12 MB
+  FAIL_SIZE: 26214400     # 25 MB

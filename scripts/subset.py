@@ -9,9 +9,10 @@ from fontTools.ttLib import TTFont
 
 from common import BUILD, ROOT, base_path, load_spec, read_charset
 
-# Always kept: ASCII, CJK symbols & punctuation, Bopomofo, full-width forms, common quotes/dashes
+# Always kept: ASCII, no-break space, CJK symbols & punctuation, Bopomofo, full-width forms, common quotes/dashes
 ALWAYS = (
     set(range(0x20, 0x7F))
+    | {0xA0}
     | set(range(0x3000, 0x3040))
     | set(range(0x3105, 0x3130))
     | set(range(0xFF01, 0xFF5F))

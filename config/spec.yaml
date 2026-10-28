@@ -5,15 +5,16 @@ family:
   zh: 晴墨黑體
   en: Qingmo Sans TC
   ps_prefix: QingmoSansTC
-  version: "0.001"
+  version: "0.100"
   vendor: QMSP            # TODO: 4 字元 vendor ID，發布前向 Microsoft 註冊
   repo: https://github.com/EddyKuo/qingmo-sans
 
 base:
-  name: Source Han Sans TC (Variable, TrueType)
-  url: ""                 # TODO(Phase 1): 由 https://github.com/adobe-fonts/source-han-sans/releases 鎖定 asset URL
+  name: Source Han Sans TC (Variable, TrueType; Region-specific Subset TW, release 2.005)
+  # 釘在 release 分支的 commit，避免 URL 內容變動
+  url: https://raw.githubusercontent.com/adobe-fonts/source-han-sans/a4f7cf94edfb9d7ffbdfc4841de276358bd7e0f2/Variable/TTF/Subset/SourceHanSansTW-VF.ttf
   filename: SourceHanSansTC-VF.ttf
-  sha256: ""              # TODO(Phase 1): 首次下載後 pin
+  sha256: cf6889f4c0f1adeaf814ca3e98cc692d9e2d706501cf7545b9b58f6e3966b6ac
   reserved_font_name: Source
 
 axis:
@@ -21,11 +22,11 @@ axis:
   name: Weight
   default: 400
 
-# 從母體 VF 抽出的 master 位置；Phase 1 讀取母體 fvar 後確認是否落在範圍內
-masters: [200, 400, 900]
+# 從母體 VF 抽出的 master 位置；母體 wght 範圍 250..900（Phase 1 確認）
+masters: [250, 400, 900]
 
 instances:
-  - {name: ExtraLight, zh: 極細, wght: 200}
+  - {name: ExtraLight, zh: 極細, wght: 250}
   - {name: Light,      zh: 細,   wght: 300}
   - {name: Regular,    zh: 標準, wght: 400}
   - {name: Medium,     zh: 中,   wght: 500}
@@ -34,8 +35,9 @@ instances:
 
 charsets:
   phase1: config/charsets/phase1.txt
-  # phase2: config/charsets/moe-4808.txt   # 教育部常用字
-  # phase3: config/charsets/big5.txt
+  highfreq500: config/charsets/highfreq500.txt   # 抽檢範圍；由 scripts/charsets/highfreq.py 產生，已併入 phase1
+  big5: config/charsets/big5.txt                 # PRD v1.0：Big5 全部漢字 13,064 字
+  full: config/charsets/full.txt                 # 母體全部漢字 17,760 字（建置預設）
 
 # 風格參數：Regular (wght 400) 的 v0 初值，見 Spec「風格參數」
 style:
@@ -46,9 +48,18 @@ style:
   entry_cut_deg: 12             # 起筆斜切角
   exit_taper_pct: 8             # 收筆微收
   corner_radius_units: 6        # 折角軟化半徑（UPM 1000），隨字重縮放
+  # 筆畫模板（strokes.py）
+  pie_tip_pct: 55               # 撇：出鋒端寬度縮為原本的 55%
+  pie_min_width: 22             # 撇：出鋒端最小寬度（UPM 1000），末端不留尖刺
+  na_tip_out_pct: 35            # 捺：尖端外移（× 端寬）
+  na_tip_rise_pct: 15           # 捺：尖端高於平台（× 端寬）
+  dot_tip_pct: 25               # 點：上端收尖，寬度縮為 25%
+  dot_round_pct: 60             # 點：下端圓頭凸出（× 端寬）
 
-# 依序套用的幾何改造；每個都必須保持點數與 on/off-curve 結構不變
-transforms: [contrast, terminals, corners]
+# 依序套用的幾何改造（只作用於 CJK 統一漢字）。point transform 不得改變點數；
+# structural transform（strokes、corners）在所有 master 做相同的結構變更，且必須排在所有 point transform 之後
+transforms: [proportion, contrast, terminals, strokes, corners]
 
 qa:
   forbidden_name_terms: [Source]
+  gray_std_ratio_max: 1.05     # 灰度：漢字覆蓋率標準差 / 母體同字重標準差 的上限（Phase 1 定案）

@@ -13,11 +13,11 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install -r requirements.txt
+      - run: make test
       - run: make smoke
 
   build:
-    # 啟用條件：config/spec.yaml 的 base.url 與 base.sha256 已在 Phase 1 鎖定
-    if: ${{ vars.BASE_PINNED == 'true' }}
+    # config/spec.yaml 的 base.url / base.sha256 已於 Phase 1 鎖定
     runs-on: ubuntu-latest
     needs: smoke
     steps:

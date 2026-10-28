@@ -39,10 +39,15 @@ def main() -> None:
         run("scripts/check_compat.py", t / "masters")
         run("scripts/transform/pipeline.py", "--indir", t / "masters", "--outdir", t / "transformed")
         run("scripts/check_compat.py", t / "transformed")
-        run("scripts/build_vf.py", "--indir", t / "transformed", "--out", t / "vf.ttf", *m)
+        run("scripts/build_vf.py", "--indir", t / "transformed", "--out", t / "vf.ttf", *m,
+            "--avar-src", t / "subset.ttf")
+        run("scripts/build_static.py", "--vf", t / "vf.ttf", "--outdir", t / "fonts")
         run("scripts/inspect_base.py", "--src", t / "vf.ttf")
         run("scripts/qa/check_names.py", t / "vf.ttf")
         run("scripts/qa/coverage.py", t / "vf.ttf", "--charset-file", charset)
+        run("scripts/qa/outlines.py", t / "vf.ttf")
+        run("scripts/qa/outlines.py", "--no-overlap", *sorted((t / "fonts" / "static").glob("*.ttf")))
+        run("tests/test_transforms.py")
     print("SMOKE TEST PASSED")
 
 
