@@ -21,6 +21,21 @@ the OFL, no Qingmo font name contains the Reserved Font Name.
 ChangeLog
 ---------
 
+2026-10-28 (Qingmo Sans Project) Version 0.002
+- Phase 1 PoC: ~330 Han characters (config/charsets/phase1.txt)
+- Base pinned: Source Han Sans TW-subset VF 2.005 (TrueType), commit a4f7cf9,
+  sha256 recorded in config/spec.yaml
+- Base wght range is 250..900, so masters are 250/400/900 and ExtraLight sits
+  at 250 instead of 200; the base avar weight curve is carried into the VF
+- Transforms on Han ideographs (Regular values, scaled per weight):
+  proportion (counter +3%, centre lift <= 0.5%, stroke widths kept),
+  contrast (horizontal:vertical = 82:100), terminals (12 deg entry cut,
+  8% exit taper on visible stroke ends), corners (r = 6 outer-corner rounding)
+- Fixed base contour direction on 7 glyphs (brackets, bopomofo)
+- Added U+00A0, unhinted prep/gasp, static instances with overlaps removed,
+  WOFF2
+- Not yet done: dot / na / pie stroke templates
+
 2026-10-28 (Qingmo Sans Project) Version 0.001
 - Phase 0: Design Spec v0, repo skeleton, clean-room policy, build pipeline
   (subset -> masters -> transforms -> compatibility gate -> VF -> QA)

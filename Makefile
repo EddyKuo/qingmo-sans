@@ -2,13 +2,15 @@
 .RECIPEPREFIX = >
 PY ?= python3
 VF := fonts/variable/QingmoSansTC[wght].ttf
+STATICS = $(wildcard fonts/static/*.ttf)
+BASE_SUBSET := build/subset/base-phase1.ttf
 # 任一可變 TTF；--masters 需落在它的 wght 範圍內
 SMOKE_FONT ?= build/smoke/Lora[wght].ttf
 SMOKE_MASTERS ?= 400,700
 
-.PHONY: all fetch inspect subset masters transform compat build qa smoke clean
+.PHONY: all fetch inspect subset masters transform compat build static qa test smoke clean
 
-all: build qa
+all: static qa
 
 fetch:
 > $(PY) scripts/fetch_base.py
@@ -31,9 +33,18 @@ compat: transform
 build: compat
 > $(PY) scripts/build_vf.py
 
+static: build
+> $(PY) scripts/build_static.py
+
 qa:
-> $(PY) scripts/qa/check_names.py "$(VF)"
+> $(PY) scripts/qa/check_names.py "$(VF)" $(STATICS)
 > $(PY) scripts/qa/coverage.py "$(VF)" --charset phase1
+> $(PY) scripts/qa/outlines.py "$(VF)"
+> $(PY) scripts/qa/outlines.py --no-overlap $(STATICS)
+> $(PY) scripts/qa/gray.py "$(VF)" --base $(BASE_SUBSET) --wght 400
+
+test:
+> $(PY) tests/test_transforms.py
 
 $(SMOKE_FONT):
 > mkdir -p $(dir $@)
