@@ -3,7 +3,11 @@
 Compares build/masters (base, untouched) with build/transformed, contour by contour. The VF keeps
 overlaps, so a contour that crosses itself would render with a wrong-winding sliver at that weight;
 static fonts hide it (removeOverlaps), which is why this check runs on the masters.
-With --vf/--base-vf it also compares interpolated weights between masters.
+With --vf/--base-vf it also compares interpolated weights between masters. The baseline VF should be
+built from the untransformed masters through the same pipeline (Makefile: build/qa/masters-vf.ttf):
+cutting masters out of the base VF rounds coordinates, which on its own folds a few collinear
+zero-area spurs at intermediate weights (e.g. 魔 at 600). Comparing against that VF isolates what the
+transforms change.
 """
 from __future__ import annotations
 
@@ -39,7 +43,8 @@ def main() -> None:
     ap.add_argument("--base", type=pathlib.Path, default=BUILD / "masters")
     ap.add_argument("--transformed", type=pathlib.Path, default=BUILD / "transformed")
     ap.add_argument("--vf", type=pathlib.Path, help="built VF: also check interpolated weights")
-    ap.add_argument("--base-vf", type=pathlib.Path, default=BUILD / "subset" / "base-phase1.ttf")
+    ap.add_argument("--base-vf", type=pathlib.Path, default=BUILD / "qa" / "masters-vf.ttf",
+                    help="VF built from the untransformed masters (same pipeline, no transforms)")
     ap.add_argument("--weights", default="300,350,500,600,700,800")
     args = ap.parse_args()
 

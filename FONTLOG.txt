@@ -21,6 +21,15 @@ the OFL, no Qingmo font name contains the Reserved Font Name.
 ChangeLog
 ---------
 
+2026-10-28 (Qingmo Sans Project) Version 0.100
+- Full character set: all 17,760 Han characters of the base (Big5 13,064 plus
+  HK, Ext-A and SIP characters); 18,343 glyphs
+- Safety net in the transform pipeline: a transform that errors or adds a
+  self-intersection at any master or interpolated weight is skipped for that
+  glyph only (109 of 17,684 glyphs, listed in transform-report.json)
+- Static build settles removeOverlaps rounding artefacts (slivers, pinches,
+  degenerate tiny curves) until the outline QA is clean
+
 2026-10-28 (Qingmo Sans Project) Version 0.004
 - Charset: high-frequency 500 list (config/charsets/highfreq500.txt, built
   from Unicode Unihan kHanyuPinlu by scripts/charsets/highfreq.py) merged into

@@ -18,6 +18,8 @@ from geometry import contour_of, contour_ranges, inside, neighbours
 
 def _unit(a, b):
     d = math.dist(a, b)
+    if d == 0:
+        return (0.0, 0.0), 0.0
     return ((b[0] - a[0]) / d, (b[1] - a[1]) / d), d
 
 

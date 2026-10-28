@@ -5,7 +5,7 @@ family:
   zh: 晴墨黑體
   en: Qingmo Sans TC
   ps_prefix: QingmoSansTC
-  version: "0.004"
+  version: "0.100"
   vendor: QMSP            # TODO: 4 字元 vendor ID，發布前向 Microsoft 註冊
   repo: https://github.com/EddyKuo/qingmo-sans
 
@@ -36,8 +36,8 @@ instances:
 charsets:
   phase1: config/charsets/phase1.txt
   highfreq500: config/charsets/highfreq500.txt   # 抽檢範圍；由 scripts/charsets/highfreq.py 產生，已併入 phase1
-  # phase2: config/charsets/moe-4808.txt   # 教育部常用字
-  # phase3: config/charsets/big5.txt
+  big5: config/charsets/big5.txt                 # PRD v1.0：Big5 全部漢字 13,064 字
+  full: config/charsets/full.txt                 # 母體全部漢字 17,760 字（建置預設）
 
 # 風格參數：Regular (wght 400) 的 v0 初值，見 Spec「風格參數」
 style:

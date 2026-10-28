@@ -2,14 +2,15 @@
 
 繁體中文「明黑混合」內文字型：黑體的骨架與清晰度，加上明體的書寫筆勢。以 [SIL OFL 1.1](OFL.txt) 免費開源，衍生自 Source Han Sans TC。
 
-> 狀態：**Phase 1**（PoC 字集 549 字，含高頻 500 字）。設計規格見 [`docs/晴墨黑體 Design Spec v0.md`](docs/晴墨黑體%20Design%20Spec%20v0.md)，
+> 狀態：**全字集 0.100**（母體全部 17,760 個漢字，含 Big5 13,064 字）。設計規格見 [`docs/晴墨黑體 Design Spec v0.md`](docs/晴墨黑體%20Design%20Spec%20v0.md)，
 > 研究與建置過程見 [`docs/研究與建置紀錄.md`](docs/研究與建置紀錄.md)。
 
 ## 建置
 
 ```bash
 pip install -r requirements.txt
-make all          # 下載並驗證母體 → 改造 → VF + 6 個 static + WOFF2 → QA
+make all          # 下載並驗證母體 → 改造 → VF + 6 個 static + WOFF2 → QA（全字集約 30 分鐘）
+make all CHARSET=phase1   # 只建 549 字的快速版本
 make test         # transform 單元測試（不需字型檔）
 make smoke        # 用 Lora 可變字型（OFL）跑整條 pipeline，不需中文母體
 ```
@@ -30,13 +31,13 @@ fetch_base → subset(phase charset) → extract_masters(wght 250/400/900)
 
 | 路徑 | 內容 |
 | --- | --- |
-| `fonts/variable/QingmoSansTC[wght].ttf` | 可變字型，wght 250–900，預設 400 |
-| `fonts/static/QingmoSansTC-{ExtraLight,Light,Regular,Medium,Bold,Heavy}.ttf` | static instances（已移除 overlap） |
-| `fonts/webfonts/*.woff2` | 上述全部的 WOFF2 |
+| `fonts/variable/QingmoSansTC[wght].ttf` | 可變字型，wght 250–900，預設 400（約 19.8 MB） |
+| `fonts/static/QingmoSansTC-{ExtraLight,Light,Regular,Medium,Bold,Heavy}.ttf` | static instances（已移除 overlap，各約 9 MB） |
+| `fonts/webfonts/*.woff2` | 上述全部的 WOFF2（VF 約 8.9 MB、static 約 3–3.7 MB） |
 
 ## 風格改造（Phase 1）
 
-只作用於 CJK 統一漢字；拉丁字母、標點、注音沿用母體字形。所有「改哪些點」的判斷在 Regular（wght 400）master 上做一次，再套到每個 master，確保點相容。
+只作用於 CJK 統一漢字；拉丁字母、標點、注音沿用母體字形。若某項改造在某個字造成錯誤或新增自交，安全網只對該字略過該項（全字集 17,684 字中 109 字，清單在 `build/transformed/transform-report.json`）。所有「改哪些點」的判斷在 Regular（wght 400）master 上做一次，再套到每個 master，確保點相容。
 
 | Transform | Spec 參數 | 做法 |
 | --- | --- | --- |
@@ -50,13 +51,13 @@ fetch_base → subset(phase charset) → extract_masters(wght 250/400/900)
 
 | 檢查 | 腳本 | Phase 1 結果 |
 | --- | --- | --- |
-| 跨 master 點相容 | `scripts/check_compat.py` | 1177 / 1177 |
-| 不新增自交（masters 與中間字重） | `scripts/qa/regressions.py` | 通過 |
+| 跨 master 點相容 | `scripts/check_compat.py` | 18,343 / 18,343 |
+| 改造不新增自交（masters 與中間字重） | `scripts/qa/regressions.py` | 通過 |
 | `name` 不含 "Source" | `scripts/qa/check_names.py` | 通過 |
-| 字集覆蓋 | `scripts/qa/coverage.py` | 549 / 549（高頻 500 / 500） |
+| 字集覆蓋 | `scripts/qa/coverage.py` | 17,760 / 17,760（Big5 13,064、高頻 500 全數涵蓋） |
 | 破字 0（自交、方向、殘留 overlap） | `scripts/qa/outlines.py` | VF 與 6 個 static 通過 |
-| 灰度一致（std ≤ 母體 × 1.05） | `scripts/qa/gray.py` | 比值 0.96–0.98 |
-| fontbakery check-universal | `fontbakery`（選用） | 0 FAIL |
+| 灰度一致（std ≤ 母體 × 1.05） | `scripts/qa/gray.py` | 比值 0.97–0.99（15,384 字） |
+| fontbakery check-universal | `fontbakery --config config/fontbakery.yaml` | 0 FAIL（檔案大小門檻見設定檔說明） |
 | 12 / 16 / 24 px 人工抽檢高頻 500 字 | `scripts/qa/proof_sheet.py` 產生校樣 | Claude 已目視校樣（見研究紀錄 §9），人工抽檢待執行 |
 
 ## 目錄
