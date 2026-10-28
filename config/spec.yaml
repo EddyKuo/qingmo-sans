@@ -7,7 +7,7 @@ family:
   ps_prefix: QingmoSansTC
   version: "0.001"
   vendor: QMSP            # TODO: 4 字元 vendor ID，發布前向 Microsoft 註冊
-  repo: https://github.com/OWNER/qingmo-sans   # TODO: 換成實際 repo
+  repo: https://github.com/EddyKuo/qingmo-sans
 
 base:
   name: Source Han Sans TC (Variable, TrueType)

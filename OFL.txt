@@ -1,5 +1,5 @@
 Copyright 2014-2021 Adobe (http://www.adobe.com/), with Reserved Font Name 'Source'.
-Copyright 2026 The Qingmo Sans Project Authors (https://github.com/OWNER/qingmo-sans).
+Copyright 2026 The Qingmo Sans Project Authors (https://github.com/EddyKuo/qingmo-sans).
 
 This Font Software is licensed under the SIL Open Font License, Version 1.1.
 This license is copied below, and is also available with a FAQ at:
