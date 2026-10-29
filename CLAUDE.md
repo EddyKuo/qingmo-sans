@@ -24,7 +24,23 @@ make test     # transform 單元測試
 make smoke    # 用 Lora（OFL）跑整條 pipeline，不需中文母體
 ```
 
+macOS / Linux 的 venv 直譯器是 `.venv/bin/python`，要傳給 make：`make all PY=.venv/bin/python`（Makefile 預設的 `PY` 是系統 `python3`）。
+Makefile 用標準 tab 縮排，不要改回 `.RECIPEPREFIX`，因為 macOS 內建的 GNU Make 3.81 不支援。
+
 Windows 沒有 `make`：依 `Makefile` 順序直接執行 `.venv/Scripts/python scripts/...`，並設定 `PYTHONIOENCODING=utf-8`。
+
+### 產出位置
+
+- `make all`：字型寫到 `fonts/{variable,static,webfonts}/`，中間檔寫到 `build/`（base、subset、masters、transformed、qa、proof）
+- `make webfonts`：把 VF 與 static 切成 unicode-range WOFF2 切片，寫到 `fonts/webfont-slices/`（含 CSS 與 `demo.html`）
+- `make release`：把 `fonts/` 的成品（含 `webfont-slices/`，若有）連同 `OFL.txt`、`FONTLOG.txt`、fontconfig 設定搬到 `release-font/`，再刪除 `fonts/` 和 `build/`（保留 `build/base/` 母體快取）
+- 需要 `fonts/` 或 `build/` 的步驟（QA、bakery、proof、檢查 transform-report）都要在 `make release` 之前跑
+- `fonts/`、`build/`、`release-font/` 都在 `.gitignore`，不進版控
+
+### 發佈
+
+- 推送 `v<版本>` tag 會觸發 `.github/workflows/release.yml`，在 CI 建置並建立 GitHub Release；tag 必須等於 `config/spec.yaml` 的 `family.version`，且 `FONTLOG.txt` 要有同版號段落
+- 字型檔不 commit 進 repo，只透過 Releases 散布
 
 ## 架構規則
 

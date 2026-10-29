@@ -68,7 +68,7 @@ def test_proportion_keeps_stroke_width():
     assert math.isclose(out[0][1] - out[1][1], 77, abs_tol=1e-6), "horizontal width kept"
     assert math.isclose(out[4][0] - out[7][0], 81, abs_tol=1e-6), "vertical width kept"
     lift = (out[0][1] + out[1][1]) / 2 - (466 + 389) / 2
-    assert 0 < lift <= PARAMS["center_shift_up_pct"] / 100 * 1000 + 3 * PARAMS["counter_open_pct"], lift
+    assert 0 < lift <= PARAMS["center_shift_up_pct"] / 100 * 1000 + 3 * abs(PARAMS["counter_open_pct"]), lift
 
 
 def test_corners_add_points_identically_across_masters():

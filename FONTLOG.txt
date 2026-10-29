@@ -21,6 +21,26 @@ the OFL, no Qingmo font name contains the Reserved Font Name.
 ChangeLog
 ---------
 
+2026-10-29 (Qingmo Sans Project) Version 0.101
+- Skeleton tightened after maintainer review found 0.100 "too loose":
+  counter_open_pct 3.0 -> -25.0 (centre components move inward by up to
+  ~31 units, stroke widths kept; the old +3 moved them by under 4 units,
+  which was not visible), center_shift_up_pct 0.5 -> 2.0 (20 units).
+  Rationale: public writing on Han type design describes a tight counter and
+  slightly raised centre as the traditional, more legible structure; the
+  maintainer approved moving these two dimensions (see Design Spec,
+  "差異化定義"). Square skeleton, soft corners and terminal rules unchanged
+- Gray uniformity improved: std ratio 0.973 -> 0.918 at wght 400
+- Safety net now skips 118 of 17,684 glyphs (was 109); proportion is
+  skipped on 27 glyphs (was 8), none in the high-frequency 500
+- Build: Makefile uses tab recipes so the GNU Make 3.81 bundled with macOS
+  works; new `make release` target collects fonts into release-font/
+- Distribution: web font slices (`make webfonts`: 45 unicode-range WOFF2
+  slices per font ordered high-frequency 500 -> Big5 common -> Big5 less
+  common -> rest, with @font-face CSS and a demo page), a Linux fontconfig
+  file preferring Qingmo for zh-TW/HK/MO sans-serif and system-ui, and a
+  tag-triggered GitHub Release workflow
+
 2026-10-28 (Qingmo Sans Project) Version 0.100
 - Full character set: all 17,760 Han characters of the base (Big5 13,064 plus
   HK, Ext-A and SIP characters); 18,343 glyphs

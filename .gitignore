@@ -1,5 +1,6 @@
 build/
 fonts/
+release-font/
 __pycache__/
 *.pyc
 .venv/
