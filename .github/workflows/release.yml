@@ -1,0 +1,51 @@
+name: release
+
+# 推送 v* tag（例如 v0.101）時：全字集建置 → QA → fontbakery → 網頁切片 → 打包發佈 GitHub Release。
+# tag 必須等於 config/spec.yaml 的 family.version；0.x 版發佈為 pre-release。
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt fontbakery
+      - name: tag 與 spec 版號一致
+        run: |
+          version=$(python -c 'import yaml; print(yaml.safe_load(open("config/spec.yaml"))["family"]["version"])')
+          test "v$version" = "$GITHUB_REF_NAME" || { echo "tag $GITHUB_REF_NAME 與 spec 版號 v$version 不一致"; exit 1; }
+          python scripts/release_notes.py "$version" > /dev/null
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+      - run: make test
+      - run: make all
+      - run: make bakery
+      - run: make webfonts
+      - name: Release notes
+        run: |
+          mkdir dist
+          python scripts/release_notes.py "$VERSION" > dist/notes.md
+      - run: make release
+      - name: 打包
+        run: |
+          cd release-font
+          zip -qr "../dist/QingmoSansTC-$VERSION.zip" . -x 'webfont-slices/*'
+          zip -qr "../dist/QingmoSansTC-$VERSION-webfont-slices.zip" webfont-slices OFL.txt
+          cd ../dist
+          sha256sum *.zip > SHA256SUMS.txt
+      - name: 發佈
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          pre=""
+          case "$VERSION" in 0.*) pre="--prerelease" ;; esac
+          gh release create "$GITHUB_REF_NAME" dist/*.zip dist/SHA256SUMS.txt \
+            --title "晴墨黑體 $VERSION" --notes-file dist/notes.md $pre

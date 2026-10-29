@@ -1,4 +1,4 @@
-"""中宮與重心：中宮放鬆、重心上移、字身比例（spec: style.counter_open_pct / center_shift_up_pct / aspect_ratio）。
+"""中宮與重心：中宮放鬆或收緊（k < 0）、重心上移、字身比例（spec: style.counter_open_pct / center_shift_up_pct / aspect_ratio）。
 
 Design Spec v0：中宮「per-component 外移，保持部件筆畫粗細」；重心「上移 ≤ 0.5%」；字身「不做整字縮放」。
 

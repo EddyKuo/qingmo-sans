@@ -5,7 +5,7 @@ family:
   zh: 晴墨黑體
   en: Qingmo Sans TC
   ps_prefix: QingmoSansTC
-  version: "0.100"
+  version: "0.101"
   vendor: QMSP            # TODO: 4 字元 vendor ID，發布前向 Microsoft 註冊
   repo: https://github.com/EddyKuo/qingmo-sans
 
@@ -42,8 +42,8 @@ charsets:
 # 風格參數：Regular (wght 400) 的 v0 初值，見 Spec「風格參數」
 style:
   aspect_ratio: 1.00            # 字身方正
-  counter_open_pct: 3.0         # 中宮比母體放鬆
-  center_shift_up_pct: 0.5      # 重心上移上限
+  counter_open_pct: -25.0       # 中宮：正值放鬆、負值收緊；最大位移 = 125 × k / 100 units（-25 ≈ 31 units，約字身 3%）。0.101 起收緊（維護者核可）
+  center_shift_up_pct: 2.0      # 重心：字身中段上移 2%（20 units），框頂框底不動。0.101 起
   contrast_h_over_v: 0.82       # 橫 / 豎 粗細比
   entry_cut_deg: 12             # 起筆斜切角
   exit_taper_pct: 8             # 收筆微收
