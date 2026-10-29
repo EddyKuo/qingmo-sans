@@ -5,7 +5,7 @@ family:
   zh: 晴墨黑體
   en: Qingmo Sans TC
   ps_prefix: QingmoSansTC
-  version: "0.101"
+  version: "0.102"
   vendor: QMSP            # TODO: 4 字元 vendor ID，發布前向 Microsoft 註冊
   repo: https://github.com/EddyKuo/qingmo-sans
 
@@ -38,6 +38,7 @@ charsets:
   highfreq500: config/charsets/highfreq500.txt   # 抽檢範圍；由 scripts/charsets/highfreq.py 產生，已併入 phase1
   big5: config/charsets/big5.txt                 # PRD v1.0：Big5 全部漢字 13,064 字
   full: config/charsets/full.txt                 # 母體全部漢字 17,760 字（建置預設）
+  strokes: config/charsets/strokes-sample.txt    # 筆畫模板取樣（提、長點與不應改變的對照字）
 
 # 風格參數：Regular (wght 400) 的 v0 初值，見 Spec「風格參數」
 style:
@@ -55,6 +56,17 @@ style:
   na_tip_rise_pct: 15           # 捺：尖端高於平台（× 端寬）
   dot_tip_pct: 25               # 點：上端收尖，寬度縮為 25%
   dot_round_pct: 60             # 點：下端圓頭凸出（× 端寬）
+  # 楷書筆意（0.102，含蓄）：提（策）、長點（側）
+  ti_head_pct: 115              # 提：起筆（左下）端寬放大為 115%（頓按）
+  ti_round_pct: 35              # 提：起筆圓頭凸出（× 端寬）
+  ti_tip_pct: 22                # 提：尖端（右上）寬度縮為 22%（出鋒）
+  changdian_tip_pct: 35         # 長點：頂端寬度縮為 35%（起筆輕）
+  changdian_press_pct: 115      # 長點：尾端寬度放大為 115%（漸按）
+  changdian_round_pct: 45       # 長點：尾端圓頭凸出（× 端寬；尾端原本是曲線時不再插點）
+  # 楷書筆意（0.102，含蓄）：鉤（趯）—— 豎鉤、彎鉤、橫折鉤、臥鉤、斜鉤、豎彎鉤、豎提
+  hook_tip_pct: 35              # 鉤：鉤尖往內側收，寬度縮為 35%（出鋒）
+  hook_sweep_pct: 50            # 鉤：外側邊最後一個控制點跟著鉤尖移動 50%（往上挑）
+  hook_press_pct: 12            # 鉤：鉤前轉彎的外緣往外鼓（× 鉤尖寬，頓筆）
 
 # 依序套用的幾何改造（只作用於 CJK 統一漢字）。point transform 不得改變點數；
 # structural transform（strokes、corners）在所有 master 做相同的結構變更，且必須排在所有 point transform 之後
