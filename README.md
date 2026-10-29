@@ -2,7 +2,7 @@
 
 繁體中文「明黑混合」內文字型：黑體的骨架與清晰度，加上明體的書寫筆勢。以 [SIL OFL 1.1](OFL.txt) 免費開源，衍生自 Source Han Sans TC。
 
-> 狀態：**全字集 0.101**（母體全部 17,760 個漢字，含 Big5 13,064 字）。設計規格見 [`docs/晴墨黑體 Design Spec v0.md`](docs/晴墨黑體%20Design%20Spec%20v0.md)，
+> 狀態：**全字集 0.102**（母體全部 17,760 個漢字，含 Big5 13,064 字）。設計規格見 [`docs/晴墨黑體 Design Spec v0.md`](docs/晴墨黑體%20Design%20Spec%20v0.md)，
 > 研究與建置過程見 [`docs/研究與建置紀錄.md`](docs/研究與建置紀錄.md)。
 
 ## 建置
@@ -45,7 +45,7 @@ release-font/
 └── FONTLOG.txt                           版本與變更紀錄
 ```
 
-- `make release` 會先清空舊的 `release-font/`，再刪除 `fonts/` 和 `build/`（`build/base/` 的母體下載快取保留，下次建置不必重新下載）
+- `make release` 會先清空舊的 `release-font/`，再刪除 `fonts/` 和 `build/`（保留 `build/base/` 的母體下載快取，下次建置不必重新下載，以及 `build/proof/` 的校樣與字表）
 - 要跑 `make bakery`、`make proof` 或看 `build/transformed/transform-report.json`，請在 `make release` 之前跑，因為它們讀的是 `fonts/` 和 `build/`
 - `fonts/`、`build/`、`release-font/` 都不進版控；CI 的 `build` job 會把 `fonts/` 上傳成 artifact `qingmo-sans-fonts`，正式版本由 tag 觸發的 release workflow 發佈到 GitHub Releases（見「發佈流程」）
 
@@ -113,7 +113,7 @@ fc-match 'sans\-serif:lang=zh-tw'    # 應顯示 Qingmo Sans TC
 | `proportion` | 中宮收緊（k = −25，最多內移約 31 units）、重心上移 2%、寬高比 1.00 | 字面框內單調位移場；成對的豎畫 / 橫畫整筆平移，保持筆寬 |
 | `contrast` | 豎 : 橫 = 100 : 82 | 偵測橫畫上下緣，兩緣各向內移動 |
 | `terminals` | 起筆斜切 12°、收筆微收 8% | 只處理看得見的筆端（藏在其他筆畫裡的不算） |
-| `strokes` | 點上尖下圓、捺短平台出鋒、撇出鋒漸細 | 依筆端朝向與形狀辨識點 / 撇 / 捺，套用模板；點的圓頭需加點 |
+| `strokes` | 點上尖下圓、捺短平台出鋒、撇出鋒漸細；0.102 起提（頓按起筆、出鋒）、長點（輕起、漸按、圓收）與鉤（鉤前頓筆、出鋒上挑）帶含蓄的小楷筆意 | 依筆端朝向、長度、位置辨識點 / 撇 / 捺 / 提 / 長點 / 鉤，套用模板；點、提、長點的圓頭需加點 |
 | `corners` | 外角軟化 r = 6 units，隨字重縮放 | 在所有 master 的同一批轉角插入二次曲線圓角 |
 
 ## QA 閘門
@@ -127,6 +127,7 @@ fc-match 'sans\-serif:lang=zh-tw'    # 應顯示 Qingmo Sans TC
 | 破字 0（自交、方向、殘留 overlap） | `scripts/qa/outlines.py` | VF 與 6 個 static 通過 |
 | 灰度一致（std ≤ 母體 × 1.05） | `scripts/qa/gray.py` | wght 400 比值 0.918（15,384 字） |
 | fontbakery check-universal | `fontbakery --config config/fontbakery.yaml` | 0 FAIL（檔案大小門檻見設定檔說明） |
+| 逐字檢查（全部 18,063 字） | `make fontmap` → `build/proof/font-map.html` | 工具已備，待維護者檢查 |
 | 12 / 16 / 24 px 人工抽檢高頻 500 字 | `scripts/qa/proof_sheet.py` 產生校樣 | Claude 已目視校樣（見研究紀錄 §9），人工抽檢待執行 |
 
 ## 目錄

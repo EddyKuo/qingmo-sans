@@ -33,7 +33,7 @@ Windows 沒有 `make`：依 `Makefile` 順序直接執行 `.venv/Scripts/python 
 
 - `make all`：字型寫到 `fonts/{variable,static,webfonts}/`，中間檔寫到 `build/`（base、subset、masters、transformed、qa、proof）
 - `make webfonts`：把 VF 與 static 切成 unicode-range WOFF2 切片，寫到 `fonts/webfont-slices/`（含 CSS 與 `demo.html`）
-- `make release`：把 `fonts/` 的成品（含 `webfont-slices/`，若有）連同 `OFL.txt`、`FONTLOG.txt`、fontconfig 設定搬到 `release-font/`，再刪除 `fonts/` 和 `build/`（保留 `build/base/` 母體快取）
+- `make release`：把 `fonts/` 的成品（含 `webfont-slices/`，若有）連同 `OFL.txt`、`FONTLOG.txt`、fontconfig 設定搬到 `release-font/`，再刪除 `fonts/` 和 `build/`（保留 `build/base/` 母體快取與 `build/proof/` 校樣）
 - 需要 `fonts/` 或 `build/` 的步驟（QA、bakery、proof、檢查 transform-report）都要在 `make release` 之前跑
 - `fonts/`、`build/`、`release-font/` 都在 `.gitignore`，不進版控
 
@@ -66,6 +66,7 @@ Windows 沒有 `make`：依 `Makefile` 順序直接執行 `.venv/Scripts/python 
 | fontbakery（目標 0 FAIL；static 與 VF 分開跑） | `fontbakery check-universal --config config/fontbakery.yaml fonts/static/*.ttf` |
 
 人工抽檢校樣：`python scripts/qa/proof_sheet.py fonts/static/QingmoSansTC-Regular.ttf`（輸出到 `build/proof/`）。
+逐字檢查字表：`make fontmap` → `build/proof/font-map.html`（晴墨與母體內嵌、可疊圖比對、鍵盤標記 OK / 有問題、匯出清單）。
 
 ## Clean-room（見 `CLEANROOM.md`）
 

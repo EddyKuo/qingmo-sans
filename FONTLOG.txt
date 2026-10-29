@@ -21,6 +21,50 @@ the OFL, no Qingmo font name contains the Reserved Font Name.
 ChangeLog
 ---------
 
+2026-10-29 (Qingmo Sans Project) Version 0.102
+- Kaishu (small regular script) brush feel, subtle strength, approved by the
+  maintainer after reviewing 0.101 (see Design Spec, "楷書筆意"). Based only on
+  the textual description of the Eight Principles of Yong (永字八法):
+  - ti (rising stroke, 策): entry end widened to 115% with a rounded press,
+    exit narrowed to 22%. Recognised as a straight 4-segment stroke rising
+    12-75 deg, 0.25-0.48 UPM long, in the left part of the glyph (left
+    radicals such as 氵冫扌土王牛足金); strength ramps from 0 at 5 deg to
+    full at 25 deg, so flat ti (金 11-14 deg, 虫, 王) get only a little;
+    5,256 strokes, 1,584 of them at full strength
+  - changdian (long dot, 側): head narrowed to 35%, tail widened to 115%
+    with a rounded end. Recognised as a 4-segment stroke falling to the
+    right (-70 to -20 deg), longer than a dot and up to 0.85 UPM, straight
+    head, and a straight tail or straight sides (a na has a curved tail and
+    curved sides); 346 strokes in 344 glyphs, e.g. 凶, the shortened na in
+    囚季逢, and the 撇點 of 女
+  - hooks (趯), every kind (vertical, bent, turning, lying, slanted,
+    vertical-bent, vertical-rising): the tip narrows to 35% towards its
+    inner (concave) end, the last control point of the outer edge follows
+    it by 50% so the hook flicks upward, and the outer edge of the bend
+    before the hook bulges outward by 12% of the tip width (the press).
+    Recognised as a curved stroke end where the contour turns back by more
+    than 120 deg, on a contour of at least 6 segments (the hook is joined to
+    the stroke before it), pointing left (|angle| >= 160 deg) or up-right
+    (20-100 deg); 5,685 hooks in 5,260 glyphs. Only existing points move.
+    The 宀 / 冖 hooks point down-left and already use the pie taper
+- Dots: near-vertical dots now get the full dot template (pointed head,
+  round end) once they lean more than 0.2 deg off vertical and are at most
+  0.26 UPM long; base vertical strokes are exactly 0 deg. Near-horizontal
+  dots ramp from 8 to 25 deg. Reported by the maintainer: the dots under
+  糸 and 灬 (also 馬魚鳥), and the inner dots of the 金 radical, lean only
+  0.4-14 deg and kept square ends under the old 12 deg threshold, so the
+  same component differed between 錄 and 鏟; 2,541 more dots in 2,111
+  glyphs, 40,746 in total
+- Safety net unchanged: 118 of 17,684 glyphs skip a transform; no new skips
+- VF grows by 67 KB (round heads add one point per dot / ti / changdian
+  stroke; hooks only move existing points)
+- Gray uniformity std ratio 0.918 -> 0.921 at wght 400 (limit 1.05)
+- New sample charset config/charsets/strokes-sample.txt for stroke template
+  regression proofs (make build CHARSET=strokes)
+- Tools: scripts/qa/font_map.py (make fontmap), a single-file 2D map of every
+  character with the base overlay and per-glyph review marks; make release now
+  keeps build/proof/
+
 2026-10-29 (Qingmo Sans Project) Version 0.101
 - Skeleton tightened after maintainer review found 0.100 "too loose":
   counter_open_pct 3.0 -> -25.0 (centre components move inward by up to

@@ -10,7 +10,7 @@ SMOKE_MASTERS ?= 400,700
 
 RELEASE := release-font
 
-.PHONY: all fetch inspect subset masters transform compat build static qa bakery proof webfonts test smoke release clean
+.PHONY: all fetch inspect subset masters transform compat build static qa bakery proof fontmap webfonts test smoke release clean
 
 all: static qa
 
@@ -55,6 +55,10 @@ bakery:
 proof:
 	$(PY) scripts/qa/proof_sheet.py fonts/static/QingmoSansTC-Regular.ttf
 
+# 逐字檢查用的 2D 字表：build/proof/font-map.html（字型內嵌，雙擊開啟；fonts/ 不在時改用 release-font/）
+fontmap:
+	$(PY) scripts/qa/font_map.py
+
 # 網頁用：依 unicode-range 切片的 WOFF2 + @font-face CSS（需先跑 make all）
 webfonts:
 	rm -rf fonts/webfont-slices
@@ -71,7 +75,7 @@ smoke: $(SMOKE_FONT)
 	$(PY) tests/smoke_test.py "$(SMOKE_FONT)" --masters $(SMOKE_MASTERS)
 
 # 把 fonts/ 的成品搬到 release-font/（附 OFL、FONTLOG 與 fontconfig 設定），再刪除中間檔；
-# 保留 build/base/ 的母體下載快取。需先跑 make all（以及要的話 webfonts、bakery、proof）
+# 保留 build/base/ 的母體下載快取與 build/proof/ 的校樣。需先跑 make all（以及要的話 webfonts、bakery、proof）
 release:
 	test -f "$(VF)" || { echo "找不到 $(VF)，請先執行 make all"; exit 1; }
 	rm -rf $(RELEASE)
@@ -80,7 +84,7 @@ release:
 	if [ -d fonts/webfont-slices ]; then cp -R fonts/webfont-slices $(RELEASE)/; fi
 	cp config/fontconfig/60-qingmo-sans-tc.conf $(RELEASE)/
 	rm -rf fonts
-	find build -mindepth 1 -maxdepth 1 ! -name base -exec rm -rf {} +
+	find build -mindepth 1 -maxdepth 1 ! -name base ! -name proof -exec rm -rf {} +
 
 clean:
 	rm -rf build fonts
