@@ -2,6 +2,7 @@ name: build
 
 on:
   push:
+    branches: ["**"]   # 推 tag 不觸發；tag 由 release.yml 建置並發佈
   pull_request:
 
 jobs:
@@ -27,7 +28,7 @@ jobs:
           python-version: "3.12"
       - run: pip install -r requirements.txt
       - run: make all
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         with:
           name: qingmo-sans-fonts
           path: fonts/
