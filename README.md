@@ -2,7 +2,7 @@
 
 繁體中文「明黑混合」內文字型：黑體的骨架與清晰度，加上明體的書寫筆勢。以 [SIL OFL 1.1](OFL.txt) 免費開源，衍生自 Source Han Sans TC。
 
-> 狀態：**全字集 0.102**（母體全部 17,760 個漢字，含 Big5 13,064 字）：在 0.101 的骨架上，為提、長點、鉤加入含蓄的小楷筆意，並修正金字旁與糸、灬的點。0.102 已合併進 `main`，`v0.102` tag 尚未推送（等維護者檢查字表）。設計規格見 [`docs/晴墨黑體 Design Spec v0.md`](docs/晴墨黑體%20Design%20Spec%20v0.md)，
+> 狀態：**全字集 0.103**（母體全部 17,760 個漢字，含 Big5 13,064 字）：在 0.101 的骨架上加入小楷筆意，0.102 處理點、提、長點、鉤，0.103 加強點的頓按、補上啄，並為橫、豎加入起筆頓按、收筆頓筆、細腰、垂露與懸針。另有兩個風格版本並行比較中：`subtle`（預設，黑體＋少量但一致的筆意）與 `kaishu`（楷意黑體，橫左低右高、對比加大）。設計規格見 [`docs/晴墨黑體 Design Spec v0.md`](docs/晴墨黑體%20Design%20Spec%20v0.md)，
 > 研究與建置過程見 [`docs/研究與建置紀錄.md`](docs/研究與建置紀錄.md)。
 
 ## 建置
@@ -13,6 +13,7 @@ make all PY=.venv/bin/python          # 下載並驗證母體 → 改造 → VF 
 make all PY=.venv/bin/python CHARSET=phase1   # 只建 549 字的快速版本
 make all PY=.venv/bin/python CHARSET=strokes  # 筆畫模板取樣字集（提、長點、鉤、點與不應改變的對照字）
 make fontmap PY=.venv/bin/python      # 逐字檢查字表 build/proof/font-map.html
+make all PY=.venv/bin/python PROFILE=kaishu   # 建置另一個風格版本（config/spec.yaml 的 profiles）
 make webfonts PY=.venv/bin/python     # 網頁用 unicode-range 切片 WOFF2 + CSS（約 10 秒）
 make release                          # 成品搬到 release-font/，並刪除中間檔
 make test PY=.venv/bin/python         # transform 單元測試（不需字型檔）
@@ -25,7 +26,7 @@ Pipeline：
 
 ```
 fetch_base → subset(phase charset) → extract_masters(wght 250/400/900)
-  → transform/{proportion, contrast, terminals, strokes, corners} → check_compat（點相容閘門）
+  → transform/{proportion, contrast, terminals, strokes, brush, corners} → check_compat（點相容閘門）
   → build_vf（designspace + 母體 avar 曲線 + STAT + 命名）
   → build_static（6 個 instance、removeOverlaps、WOFF2）
   → qa/{regressions, check_names, coverage, outlines, gray}
@@ -37,7 +38,7 @@ fetch_base → subset(phase charset) → extract_masters(wght 250/400/900)
 
 ```
 release-font/
-├── variable/QingmoSansTC[wght].ttf      可變字型，wght 250–900，預設 400（約 19.9 MB）
+├── variable/QingmoSansTC[wght].ttf      可變字型，wght 250–900，預設 400（約 18 MB）
 ├── static/QingmoSansTC-{ExtraLight,Light,Regular,Medium,Bold,Heavy}.ttf
 │                                         static instances（已移除 overlap，各約 9 MB）
 ├── webfonts/*.woff2                      上述全部的整檔 WOFF2（VF 約 9.0 MB、static 約 3.2–3.8 MB）
@@ -108,7 +109,7 @@ fc-match 'sans\-serif:lang=zh-tw'    # 應顯示 Qingmo Sans TC
 
 ## 風格改造
 
-只作用於 CJK 統一漢字；拉丁字母、標點、注音沿用母體字形。若某項改造在某個字造成錯誤或新增自交，安全網只對該字略過該項（全字集 17,684 字中 118 字，清單在 `build/transformed/transform-report.json`）。所有「改哪些點」的判斷在 Regular（wght 400）master 上做一次，再套到每個 master，確保點相容。
+只作用於 CJK 統一漢字；拉丁字母、標點、注音沿用母體字形。若某項改造在某個字造成錯誤或新增自交，安全網只對該字略過該項（全字集 17,684 字中 116 字，清單在 `build/transformed/transform-report.json`）。所有「改哪些點」的判斷在 Regular（wght 400）master 上做一次，再套到每個 master，確保點相容。
 
 | Transform | Spec 參數 | 做法 |
 | --- | --- | --- |
@@ -116,18 +117,19 @@ fc-match 'sans\-serif:lang=zh-tw'    # 應顯示 Qingmo Sans TC
 | `contrast` | 豎 : 橫 = 100 : 82 | 偵測橫畫上下緣，兩緣各向內移動 |
 | `terminals` | 起筆斜切 12°、收筆微收 8% | 只處理看得見的筆端（藏在其他筆畫裡的不算） |
 | `strokes` | 點上尖下圓、捺短平台出鋒、撇出鋒漸細；0.102 起提（頓按起筆、出鋒）、長點（輕起、漸按、圓收）與鉤（鉤前頓筆、出鋒上挑）帶含蓄的小楷筆意 | 依筆端朝向、長度、位置辨識點 / 撇 / 捺 / 提 / 長點 / 鉤，套用模板；點、提、長點的圓頭需加點，鉤只移動既有點。提與近水平的點依角度漸增強度，避免同一部件在不同字裡有的套、有的沒套；近垂直的短筆只要稍微傾斜（> 0.2°）就當成點 |
+| `brush` | 0.103：橫起筆頓按、收筆往右下頓、細腰；豎起筆頓筆、收筆垂露或懸針；主筆完整強度、副筆較輕；`kaishu` 版本另有橫畫左低右高 | 沿用 `terminals` 找到的筆端，端緣插入 off-curve 變圓；懸針在兩側插點收尖；量為當前 master 端緣寬的比例 |
 | `corners` | 外角軟化 r = 6 units，隨字重縮放 | 在所有 master 的同一批轉角插入二次曲線圓角 |
 
 ## QA 閘門
 
-| 檢查 | 腳本 | 0.102 結果 |
+| 檢查 | 腳本 | 0.103 結果 |
 | --- | --- | --- |
 | 跨 master 點相容 | `scripts/check_compat.py` | 18,343 / 18,343 |
 | 改造不新增自交（masters 與中間字重） | `scripts/qa/regressions.py` | 通過 |
 | `name` 不含 "Source" | `scripts/qa/check_names.py` | 通過 |
 | 字集覆蓋 | `scripts/qa/coverage.py` | 17,760 / 17,760（Big5 13,064、高頻 500 全數涵蓋） |
 | 破字 0（自交、方向、殘留 overlap） | `scripts/qa/outlines.py` | VF 與 6 個 static 通過 |
-| 灰度一致（std ≤ 母體 × 1.05） | `scripts/qa/gray.py` | wght 400 比值 0.921（15,384 字） |
+| 灰度一致（std ≤ 母體 × 1.05） | `scripts/qa/gray.py` | wght 400 比值 0.929（15,384 字，`subtle`；`kaishu` 0.934） |
 | fontbakery check-universal | `fontbakery --config config/fontbakery.yaml` | static 與 VF 皆 0 FAIL、0 ERROR（檔案大小門檻見設定檔說明） |
 | 逐字檢查（全部 18,063 字） | `make fontmap` → `build/proof/font-map.html` | 工具已備，待維護者檢查 |
 | 12 / 16 / 24 px 人工抽檢高頻 500 字 | `scripts/qa/proof_sheet.py` 產生校樣 | Claude 已目視校樣（見研究紀錄 §9），人工抽檢待執行 |
@@ -141,7 +143,7 @@ fc-match 'sans\-serif:lang=zh-tw'    # 應顯示 Qingmo Sans TC
 | `config/fontconfig/` | Linux fontconfig 設定，隨 release 散布 |
 | `scripts/` | 建置腳本；`transform/` 是幾何改造，`qa/` 是驗收閘門，`webfont_slices.py` 產生網頁切片，`release_notes.py` 產生發佈說明 |
 | `.github/workflows/` | `build.yml`（每次 push：單元測試、smoke、全字集建置）、`release.yml`（推送 `v*` tag：建置並發佈 GitHub Release） |
-| `tests/` | `test_transforms.py` 單元測試（11 個）、`smoke_test.py` 端到端測試 |
+| `tests/` | `test_transforms.py` 單元測試（16 個）、`smoke_test.py` 端到端測試 |
 | `docs/` | Design Spec、研究與建置紀錄 |
 | `CLAUDE.md` | Claude Code 工作指引（繁中回答、架構規則、閘門） |
 | `CLEANROOM.md` | 貢獻前必讀的 clean-room 規範 |

@@ -5,7 +5,7 @@ family:
   zh: 晴墨黑體
   en: Qingmo Sans TC
   ps_prefix: QingmoSansTC
-  version: "0.102"
+  version: "0.103"
   vendor: QMSP            # TODO: 4 字元 vendor ID，發布前向 Microsoft 註冊
   repo: https://github.com/EddyKuo/qingmo-sans
 
@@ -56,6 +56,7 @@ style:
   na_tip_rise_pct: 15           # 捺：尖端高於平台（× 端寬）
   dot_tip_pct: 25               # 點：上端收尖，寬度縮為 25%
   dot_round_pct: 60             # 點：下端圓頭凸出（× 端寬）
+  dot_press_pct: 125            # 點：下端寬度放大為 125%（頓按，0.103）
   # 楷書筆意（0.102，含蓄）：提（策）、長點（側）
   ti_head_pct: 115              # 提：起筆（左下）端寬放大為 115%（頓按）
   ti_round_pct: 35              # 提：起筆圓頭凸出（× 端寬）
@@ -67,10 +68,46 @@ style:
   hook_tip_pct: 35              # 鉤：鉤尖往內側收，寬度縮為 35%（出鋒）
   hook_sweep_pct: 50            # 鉤：外側邊最後一個控制點跟著鉤尖移動 50%（往上挑）
   hook_press_pct: 12            # 鉤：鉤前轉彎的外緣往外鼓（× 鉤尖寬，頓筆）
+  # 楷書筆意（0.103）：橫（勒）、豎（努）—— brush.py，量為「× 當前端緣寬 w」的百分比
+  heng_head_raise: 12           # 橫起筆：上角抬高（頓按）
+  heng_head_round: 15           # 橫起筆：端緣往左外凸
+  heng_tail_raise: 22           # 橫收筆：上角抬高（頓筆的肩）
+  heng_tail_drop: 12            # 橫收筆：下角壓低（往右下頓）
+  heng_tail_round: 35           # 橫收筆：端緣往右下外凸
+  heng_waist: 12                # 橫細腰：獨立橫畫的上下長邊中點控制點往內收
+  shu_head_flare: 10            # 豎起筆：右角往右推（頓筆）
+  shu_head_round: 30            # 豎起筆：端緣往右上外凸
+  shu_tail_press_pct: 106       # 垂露：下端寬度放大為 106%
+  shu_tail_round: 45            # 垂露：下端往下外凸
+  xuanzhen_len: 300             # 懸針：收尖的長度（× w）
+  xuanzhen_tip_pct: 18          # 懸針：針尖寬度
+
+  brush_strength: 100           # brush 所有量的整體倍率（%）
+  brush_minor: 100              # 副筆（同字同方向最長筆畫的 45% 以下）的強度（%）；100 = 不分主副
+  heng_tilt_deg: 0              # 橫的筆勢：獨立橫畫右端抬高的角度（左低右高）
+
+# 風格版本（0.103 維護者要求兩個方向並行比較）：覆蓋上面 style 的參數。
+# make ... PROFILE=<名稱> 或環境變數 QINGMO_PROFILE 選擇；未指定時用 style_profile
+style_profile: subtle
+profiles:
+  # 方向 1：黑體 + 少量筆意，但一致 —— 強度介於 0.102 與 0.103 之間，頓筆集中在主筆
+  subtle:
+    brush_strength: 60
+    brush_minor: 35
+    dot_press_pct: 112
+  # 方向 2：楷意黑體 —— 連骨架一起改：橫左低右高、橫畫更細（對比加大）、主副筆分級、筆端更重
+  kaishu:
+    brush_strength: 110
+    brush_minor: 45
+    heng_tilt_deg: 2.0
+    heng_waist: 16
+    contrast_h_over_v: 0.76
+    dot_press_pct: 125
+    dot_round_pct: 70
 
 # 依序套用的幾何改造（只作用於 CJK 統一漢字）。point transform 不得改變點數；
 # structural transform（strokes、corners）在所有 master 做相同的結構變更，且必須排在所有 point transform 之後
-transforms: [proportion, contrast, terminals, strokes, corners]
+transforms: [proportion, contrast, terminals, strokes, brush, corners]
 
 qa:
   forbidden_name_terms: [Source]

@@ -1,6 +1,7 @@
 """Shared helpers: project paths, spec loading, charset files."""
 from __future__ import annotations
 
+import os
 import pathlib
 
 import yaml
@@ -10,9 +11,16 @@ BUILD = ROOT / "build"
 FONTS = ROOT / "fonts"
 
 
-def load_spec() -> dict:
+def load_spec(profile: str | None = None) -> dict:
+    """讀 spec.yaml，並把風格版本（profiles）的參數覆蓋到 style。
+    版本依序取：引數、環境變數 QINGMO_PROFILE、spec 的 style_profile。"""
     with open(ROOT / "config" / "spec.yaml", encoding="utf-8") as fh:
-        return yaml.safe_load(fh)
+        spec = yaml.safe_load(fh)
+    name = profile or os.environ.get("QINGMO_PROFILE") or spec.get("style_profile")
+    if name:
+        spec["style"] = {**spec["style"], **spec["profiles"][name]}
+        spec["style_profile"] = name
+    return spec
 
 
 def base_path(spec: dict) -> pathlib.Path:

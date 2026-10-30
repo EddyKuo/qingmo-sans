@@ -14,6 +14,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts" / "transform"))
 sys.path.insert(0, str(ROOT / "scripts"))
 
+import brush  # noqa: E402
 import contrast  # noqa: E402
 import corners  # noqa: E402
 import proportion  # noqa: E402
@@ -191,6 +192,57 @@ def test_hook_template():
     assert out[1][0] > HOOK[1][0] and out[2][1] < HOOK[2][1], "轉彎外緣往右下鼓（頓筆）"
     # 獨立的 4 段筆畫（撇、點）不是鉤
     assert all(k != "hook" for k, *_ in strokes.plan(bar((300, 300), (100, 280), 70), [3], [1] * 4, 1000, 1000))
+
+
+def test_zhuo_template():
+    # 火的右點：右上往左下、長 0.32 UPM，不在左偏旁 → 啄：起筆（右上）放大並加圓頭，尖端（左下）收窄
+    pts = bar((870, 620), (730, 335), 75)
+    ops = strokes.plan(pts, [3], [1] * 4, 1000, 1000)
+    assert sorted(k for k, *_ in ops) == ["ti_head", "ti_tip"], ops
+    head = next(s for k, s, _ in ops if k == "ti_head")
+    assert min(pts[i][1] for i in head) > 500, "圓頭在右上的起筆端"
+
+
+def test_brush_heng_and_xuanzhen():
+    out, ends, flags = brush.transform_structure("uni5341", SHI, END_PTS, FLAGS, PARAMS, 400, ctx())
+    assert ends == [7, 16], ends   # 橫：兩端圓頭 + 兩個細腰；豎：起筆圓頭 + 懸針兩側各兩點
+    shi = brush.plan(SHI, END_PTS, FLAGS, 1000, 1000)
+    assert sorted(k for k, *_ in shi) == ["heng_head", "heng_tail", "shu_head", "tilt", "waist", "waist", "xuanzhen"], shi
+    # 收筆：右上角抬高、右下角壓低
+    assert out[0][1] > 466 and out[2][1] < 389, out[:3]
+    # 懸針：下端收窄到 xuanzhen_tip_pct
+    tip = [p for p in out[8:] if p[1] == -80]
+    g = PARAMS["brush_strength"] / 100
+    want = 81 * (1 + (PARAMS["xuanzhen_tip_pct"] / 100 - 1) * g)
+    assert len(tip) == 2 and math.isclose(abs(tip[0][0] - tip[1][0]), want, abs_tol=0.01), tip
+    # 相同結構套到別的 master
+    other = [(x, y * 1.1) for x, y in SHI]
+    _, ends2, flags2 = brush.transform_structure("uni5341", other, END_PTS, FLAGS, PARAMS, 900, ctx(stem_scale=1.4))
+    assert ends2 == ends and flags2 == flags
+
+
+def test_brush_minor_strokes_are_lighter():
+    # 二：上橫短（副筆）、下橫長（主筆）；副筆的收筆抬高量較小
+    pts = [(700, 640), (700, 570), (300, 570), (300, 640), (950, 120), (950, 50), (50, 50), (50, 120)]
+    params = dict(PARAMS, brush_minor=35, brush_strength=100, heng_tilt_deg=0)
+    ops = {(k, i): s for k, i, j, s in brush.plan(pts, [3, 7], [1] * 8, 1000, 1000, 0.35)}
+    assert ops[("heng_tail", 4)] == 1.0 and ops[("heng_tail", 0)] < 0.5, ops
+    out, _, _ = brush.transform_structure("uni4E8C", pts, [3, 7], [1] * 8, params, 400, ctx(ref=pts))
+    assert out[0][1] - 640 < out[8][1] - 120, "副筆的收筆比主筆輕"   # 上橫 4 點 + 2 圓頭 + 2 細腰後是下橫
+
+
+def test_hanging_vertical_is_chuilu():
+    # 下：豎掛在橫的下面，上方沒有露頭 → 垂露；十的豎穿過橫 → 懸針
+    xia = [(900, 770), (900, 700), (100, 700), (100, 770), (540, 770), (540, -80), (460, -80), (460, 770)]
+    kinds = {k for k, *_ in brush.plan(xia, [3, 7], [1] * 8, 1000, 1000)}
+    assert "chuilu" in kinds and "xuanzhen" not in kinds, kinds
+    assert "xuanzhen" in {k for k, *_ in brush.plan(SHI, END_PTS, FLAGS, 1000, 1000)}
+
+
+def test_profiles_override_style():
+    from common import load_spec as ls
+    k = ls("kaishu")["style"]
+    assert k["heng_tilt_deg"] > 0 and k["contrast_h_over_v"] < ls("subtle")["style"]["contrast_h_over_v"]
 
 
 def main() -> None:

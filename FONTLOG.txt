@@ -21,6 +21,57 @@ the OFL, no Qingmo font name contains the Reserved Font Name.
 ChangeLog
 ---------
 
+2026-10-30 (Qingmo Sans Project) Version 0.103
+- Kaishu brush feel made visible and extended to horizontals and verticals,
+  after the maintainer reported that the dots of 火, 煷, 犕, 痻 and the
+  horizontal and vertical strokes still lacked kaishu brush rhythm. A new
+  structural transform, brush, runs after strokes and before corners:
+  - heng (horizontal, 勒): entry end's top corner raised 12% of the end
+    width with a slight round (15%); exit end's top corner raised 22% and
+    bottom corner lowered 12% (the press down-right), rounded 35%; free
+    standing horizontals get a thinner waist (12%). 38,410 entry and
+    42,174 exit ends; 31,943 waists
+  - shu (vertical, 努): entry end's right corner pushed out 10% with a
+    round (30%); exit end is chuilu (垂露, dewdrop: widened to 106%,
+    rounded 45%) or xuanzhen (懸針, needle: tapers over 3x the width to
+    18%) for a free-standing vertical at least 0.45 UPM long, centred
+    (30-70% of the advance), reaching the bottom of the glyph, crossing
+    another stroke with at least 2.5x its width showing above, and with
+    no curved stroke touching it: 中十年平華車申半 are needles, 下不本木東
+    are dewdrops. 30,116 entry ends, 23,162 chuilu, 560 xuanzhen
+  - Main and minor strokes: each end's strength ramps from brush_minor
+    (stroke length below 45% of the longest stroke of the same direction
+    in the glyph) to full (90% and above), so only the main strokes carry
+    the full press and 三's short upper strokes stay light
+  - All amounts are fractions of the end width in each master
+- Two style profiles, built side by side at the maintainer's request after
+  asking why the result still did not look beautiful (config/spec.yaml
+  "profiles", selected with make PROFILE=<name>):
+  - subtle (default, direction 1: hei with a little, consistent brush
+    feel): brush at 60%, minor strokes at 35%, dot press 112%
+  - kaishu (direction 2: kaishu-flavoured hei, changes the skeleton):
+    brush at 110%, minor strokes at 45%, free-standing horizontals sheared
+    up 2 deg to the right (左低右高), horizontal / vertical 0.82 -> 0.76,
+    waist 16%, dot press 125% and round 70%
+- Dots: the bottom end is now widened to 125% (dot_press_pct) before the
+  round is added, so the press of the brush is visible. Dots that were
+  missed: near-vertical dots up to 0.42 UPM now qualify unless they lean
+  less than 2.5 deg (the slanted vertical of 弓 is 2 deg; the old limit
+  was 12 deg, which excluded the 火 radical and the longer 灬 dots at about
+  7 deg); near-vertical left dots (忄) may be 0.30 UPM long when they lean
+  at least 8 deg. 41,967 dots in total (+1,221)
+- zhuo (short pie, 啄): a straight 4-segment stroke falling to the left,
+  0.25-0.36 UPM long, that is not a ti, e.g. the right stroke of 火, gets
+  the ti template reversed (round, widened head at the top right, narrow
+  tip at the bottom left); 280 strokes
+- Safety net: subtle 116 of 17,684 glyphs skip a transform (was 118; brush
+  never skipped); kaishu 119 (brush skipped in 𤨕 鰳)
+- VF shrinks by about 1.95 MB (subtle 17,924,848 bytes, kaishu 17,917,228):
+  rounded ends are no longer softened by corners, which added two points
+  per corner; brush adds one point per end
+- Gray std ratio 0.921 -> subtle 0.929 / kaishu 0.934 (limit 1.05); ink
+  coverage 0.295 -> 0.302 / 0.303
+
 2026-10-29 (Qingmo Sans Project) Version 0.102
 - Kaishu (small regular script) brush feel, subtle strength, approved by the
   maintainer after reviewing 0.101 (see Design Spec, "楷書筆意"). Based only on
