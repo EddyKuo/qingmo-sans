@@ -25,6 +25,7 @@ make smoke    # 用 Lora（OFL）跑整條 pipeline，不需中文母體
 ```
 
 macOS / Linux 的 venv 直譯器是 `.venv/bin/python`，要傳給 make：`make all PY=.venv/bin/python`（Makefile 預設的 `PY` 是系統 `python3`）。
+風格版本：`config/spec.yaml` 的 `profiles` 覆蓋 `style`，`make ... PROFILE=kaishu` 選擇（預設 `style_profile`）；單元測試讀預設版本。
 Makefile 用標準 tab 縮排，不要改回 `.RECIPEPREFIX`，因為 macOS 內建的 GNU Make 3.81 不支援。
 
 Windows 沒有 `make`：依 `Makefile` 順序直接執行 `.venv/Scripts/python scripts/...`，並設定 `PYTHONIOENCODING=utf-8`。

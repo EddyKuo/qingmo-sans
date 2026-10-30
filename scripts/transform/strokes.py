@@ -1,4 +1,4 @@
-"""筆畫模板：點、撇、捺，以及 0.102 的提、長點、鉤（Design Spec v0「點 / 捺 / 撇」「楷書筆意」）。
+"""筆畫模板：點、撇、捺，以及 0.102 的提、長點、鉤與 0.103 的啄（Design Spec v0「點 / 捺 / 撇」「楷書筆意」）。
 
 在參考 master 上把每個輪廓切成「段」（相鄰 on-curve 點之間，含其間的 off-curve），
 找出筆端段（cap）：弦長 <= MAX_STEM，且前後兩段都比它長 1.5 倍以上。
@@ -10,9 +10,11 @@ cap 的朝向 = 從筆身（前後段遠端的中點）指向 cap 中點的方�
   cap 內的 off-curve 除最後一個外都排在 A 的水平線上形成平台，尖端 B 移到平台右上方 → 平台後出鋒
 - 點（上尖下圓的錐形點）：只有 4 段、兩端都是直線 cap 的短斜筆（右點長度 <= DOT_MAX_LEN、左點 <= DOT_MAX_LEN_LEFT，
   近垂直者離垂直 > DOT_V_MIN 即為完整強度；近水平者離水平 DOT_H_RAMP 線性漸強）。上端 cap 收成尖（弦長縮到 dot_tip_pct）；
-  下端 cap 插入一個 off-curve 變成圓頭 —— 會新增點，所以本模組是結構性 transform
+  下端 cap 放大到 dot_press_pct（0.103，頓按）並插入一個 off-curve 變成圓頭 —— 會新增點，所以本模組是結構性 transform
 - 提（策，0.102）：4 段、兩端直線 cap，左下往右上 TI_ANGLE、長度 TI_LEN，左下端在字寬 TI_MAX_X 內（左偏旁；
   與幾何相同的短撇區分）。朝向到 TI_FULL 才是完整強度。起筆（左下）cap 放大到 ti_head_pct 並插入圓頭（頓按），尖端（右上）縮到 ti_tip_pct
+- 啄（短撇，0.103）：4 段、兩端直線 cap、右上往左下，長度 ZHUO_LEN，不是提（火的右點）。
+  起筆（右上）cap 放大到 ti_head_pct 並插入圓頭，尖端（左下）縮到 ti_tip_pct —— 與提相同的模板，方向相反
 - 長點（側，0.102）：4 段、左上往右下 CHANGDIAN_ANGLE，比右點長、不超過 CHANGDIAN_MAX_LEN；頂端直線 cap；
   尾端為直線 cap，或為曲線 cap 但兩側皆直線（捺是尾端與兩側都彎）。頂端縮到 changdian_tip_pct，
   尾端放大到 changdian_press_pct，直線尾端再插入圓頭
@@ -37,8 +39,10 @@ MAX_STEM = 0.16        # × UPM
 DOT_MAX_LEN = 0.42     # × UPM，右點（左上→右下）的最大長度（永的首點約 0.40）
 DOT_MAX_LEN_LEFT = 0.25  # × UPM，左點（右上→左下）的最大長度；更長的是短撇
 DOT_V_MIN = 0.2        # 度，近垂直的點離垂直超過此值即為點（母體的豎畫離垂直正好 0°；灬、糸的點約 0.4–12°）
-DOT_V_NEAR = 12        # 度，離垂直小於此值的點另有長度上限 DOT_V_MAX_LEN（排除弓的斜豎，約 2°、0.29 UPM）
-DOT_V_MAX_LEN = 0.26   # × UPM
+DOT_V_NEAR = 2.5       # 度，離垂直小於此值的點另有長度上限 DOT_V_MAX_LEN（排除弓的斜豎，約 2°、0.29 UPM）
+DOT_V_MAX_LEN = 0.26   # × UPM；0.103 前 DOT_V_NEAR 為 12°，火字旁、灬較長的點（約 7°、0.29 UPM）被排除
+DOT_V_LEFT = (8, 0.30)  # 近垂直的左點（忄）離垂直 >= 8° 時長度上限放寬到 0.30 UPM；弓的斜豎離垂直 2–8°
+ZHUO_LEN = (0.25, 0.36)  # × UPM，啄（短撇）：右上往左下、兩端直線 cap，比左點長（火的右點約 0.32）
 DOT_H_RAMP = (8, 25)   # 度，近水平的點離水平的角度：以下不套用，到上限才是完整強度（女的長橫約 3°）
 TI_ANGLE = (5, 75)     # 度，提的尖端朝向（金、虫約 8–14°，扌、土約 15–25°，氵、冫約 60–64°）
 TI_FULL = 25           # 度，提的朝向到此才是完整強度；較平的提（金、虫、王）只帶少許筆意
@@ -160,8 +164,10 @@ def _four_segment(points, segs, caps, upm, advance):
     leftward = bx < tx
 
     if straight_top and straight_bottom:
-        limit = (DOT_MAX_LEN_LEFT if leftward else DOT_MAX_LEN) * upm
         off_v, off_h = abs(abs(a1) - 90), min(abs(a1), 180 - abs(a1))
+        limit = (DOT_MAX_LEN_LEFT if leftward else DOT_MAX_LEN) * upm
+        if leftward and off_v < off_h and off_v >= DOT_V_LEFT[0]:
+            limit = DOT_V_LEFT[1] * upm
         if length <= limit:
             if off_v < off_h:
                 if off_v <= DOT_V_MIN or (off_v < DOT_V_NEAR and length > DOT_V_MAX_LEN * upm):
@@ -177,6 +183,9 @@ def _four_segment(points, segs, caps, upm, advance):
                 and bx < TI_MAX_X[0] * advance and tx < TI_MAX_X[1] * advance):
             k = _ramp(a_top, TI_ANGLE[0], TI_FULL)
             return [("ti_tip", top, k), ("ti_head", bottom, k)]
+        if (leftward and ZHUO_LEN[0] * upm < length <= ZHUO_LEN[1] * upm
+                and off_v >= DOT_V_LEFT[0] and off_h >= DOT_H_RAMP[1]):
+            return [("ti_head", top, 1.0), ("ti_tip", bottom, 1.0)]
 
     sides_straight = all(len(s) == 2 for s in segs if s is not top and s is not bottom)
     if (not leftward and CHANGDIAN_ANGLE[0] <= a_bot <= CHANGDIAN_ANGLE[1] and straight_top
@@ -281,6 +290,7 @@ def transform_structure(glyph_name, points, end_pts, flags, params, wght, ctx):
         elif kind == "dot_tip":
             _taper(pts, seg, _eased(params["dot_tip_pct"], k), 0.006 * upm)
         elif kind == "dot_round":
+            _scale_about_mid(pts, seg, _eased(params["dot_press_pct"], k) / 100)
             rounds[seg[0]] = (seg, params["dot_round_pct"] * k)
         elif kind == "ti_tip":
             _taper(pts, seg, _eased(params["ti_tip_pct"], k), 0.008 * upm)

@@ -9,6 +9,11 @@ SMOKE_FONT ?= build/smoke/Lora[wght].ttf
 SMOKE_MASTERS ?= 400,700
 
 RELEASE := release-font
+# 風格版本（config/spec.yaml 的 profiles）；空白時用 spec 的 style_profile
+PROFILE ?=
+ifneq ($(PROFILE),)
+export QINGMO_PROFILE := $(PROFILE)
+endif
 
 .PHONY: all fetch inspect subset masters transform compat build static qa bakery proof fontmap webfonts test smoke release clean
 
