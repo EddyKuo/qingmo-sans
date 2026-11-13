@@ -21,6 +21,66 @@ the OFL, no Qingmo font name contains the Reserved Font Name.
 ChangeLog
 ---------
 
+2026-11-13 (Qingmo Sans Project) Version 0.104
+- Style: kaishu is now the default profile (style_profile: kaishu), chosen
+  by the maintainer after comparing the two 0.103 profiles. It changes the
+  skeleton (free-standing horizontals rise 2 deg to the right, horizontal /
+  vertical 0.82 -> 0.76); subtle is kept in config/spec.yaml for comparison
+- Corners of compound contours (the frames of 口日目田國問, drawn by the base
+  as one 冂-shaped contour), requested by the maintainer: these had no free
+  stroke ends, so they kept the plain soft corner while free strokes got
+  kaishu ends. brush now finds convex corners on clockwise outer contours
+  whose two edges are horizontal / vertical, at least 1.5x the stroke width
+  long and visible, with a matching inner corner in the same contour within
+  0.16 UPM (which gives the stroke widths):
+  - start corner (top left, where the vertical and the horizontal begin
+    together): rounded with radius 35% of the width, the control point
+    pushed out up-left by 8% (the press); 6,368 corners in 5,534 glyphs
+  - turning corner (top right, 橫折): a shoulder, radius 40%, control point
+    pushed out up-right by 32% (the pause before turning down); 9,774
+    corners in 7,936 glyphs
+  - Amounts scale with brush_strength; other corners keep the soft corner
+- Neighbour guard, after a glyph-by-glyph check of the 800 most common
+  characters against the base (rendered and compared for strokes that
+  newly touch or come apart): every transform only looked at its own
+  stroke. Now, measured on the reference master:
+  - growing moves (dot and ti press and round, changdian tail, na tip,
+    brush raises, drops, flares, rounds, frame shoulders and the 2 deg
+    tilt) are sampled along the moving edge every 6 units and in a fan of
+    directions, and limited so the gap to any other stroke stays at
+    least max(half the original gap, min(original gap, 16 units)); e.g.
+    the dot of 言 no longer touches the stroke below it (說話), nor the
+    nu of 兩 the frame
+  - shrinking moves (thinner horizontals, entry cut and exit taper, dot /
+    ti / changdian / pie / hook tips, waist, tilt) are skipped where
+    another stroke touches the edge or the tip within 4 units and would
+    come apart; e.g. the legs of 貝 stay joined to 目 (實員), the pie tips
+    of 改歡 stay joined
+  - Most common 800 characters at 128 px, against the base: strokes that
+    newly touch 161 -> 37, newly come apart 74 -> 48, counters filled
+    41 -> 10; most of the rest come from the 0.101 counter tightening
+- Rendering fixes, found by rendering every ideograph of the variable font
+  with FreeType at 500-1000 px (glyphs carry OVERLAP_SIMPLE, which FreeType
+  renders with 4x supersampling; long near-horizontal edges overflow its
+  rasterizer and the glyph is not drawn at all):
+  - a frame corner that was a contour's first point became an off-curve
+    point carrying OVERLAP_SIMPLE: 1,076 glyphs, 中國 failed from 256 px.
+    The corner point now moves to the start of the round and stays
+    on-curve
+  - the waist is a shallow polyline (one on-curve point) instead of one
+    long, almost flat quadratic curve
+  - the pipeline levels long straight edges (dx >= 30) that are almost
+    horizontal in any master (|dy| <= dx / 150) or whose slope changes
+    sign between masters (二: the tilt lifts the right end, the exit press
+    lowers it more at heavier weights), in every master; if levelling a
+    glyph would self-intersect, it is kept as is (13 glyphs)
+  - Ideographs that fail where the base does not, 1000 px: wght 250 2,
+    400 1, 700 14, 900 19 (before: 400 84, 700 574, 250 1,729 as a
+    static instance); new check scripts/qa/render.py
+- Safety net: 134 of 17,684 glyphs skip something; 13 of them only skip the
+  levelling and keep every transform; brush skipped in 𤨕 鰳
+- Gray std ratio 0.933 (limit 1.05); VF 17,718,324 bytes
+
 2026-10-30 (Qingmo Sans Project) Version 0.103
 - Kaishu brush feel made visible and extended to horizontals and verticals,
   after the maintainer reported that the dots of 火, 煷, 犕, 痻 and the

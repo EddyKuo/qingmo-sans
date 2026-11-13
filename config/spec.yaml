@@ -5,7 +5,7 @@ family:
   zh: 晴墨黑體
   en: Qingmo Sans TC
   ps_prefix: QingmoSansTC
-  version: "0.103"
+  version: "0.104"
   vendor: QMSP            # TODO: 4 字元 vendor ID，發布前向 Microsoft 註冊
   repo: https://github.com/EddyKuo/qingmo-sans
 
@@ -82,20 +82,24 @@ style:
   xuanzhen_len: 300             # 懸針：收尖的長度（× w）
   xuanzhen_tip_pct: 18          # 懸針：針尖寬度
 
+  shu_qi_round: 35              # 複合輪廓的起筆角（口、日的左上）：圓角半徑（× 筆寬，0.104）
+  shu_qi_bump: 8                # 起筆角：控制點往左上外推（頓按）
+  heng_zhe_round: 40            # 複合輪廓的折角（口、日的右上，橫折）：圓角半徑
+  heng_zhe_bump: 32             # 折角：控制點往右上外推（頓筆的肩）
   brush_strength: 100           # brush 所有量的整體倍率（%）
   brush_minor: 100              # 副筆（同字同方向最長筆畫的 45% 以下）的強度（%）；100 = 不分主副
   heng_tilt_deg: 0              # 橫的筆勢：獨立橫畫右端抬高的角度（左低右高）
 
 # 風格版本（0.103 維護者要求兩個方向並行比較）：覆蓋上面 style 的參數。
 # make ... PROFILE=<名稱> 或環境變數 QINGMO_PROFILE 選擇；未指定時用 style_profile
-style_profile: subtle
+style_profile: kaishu          # 0.104 起維護者選定 kaishu
 profiles:
-  # 方向 1：黑體 + 少量筆意，但一致 —— 強度介於 0.102 與 0.103 之間，頓筆集中在主筆
+  # 方向 1：黑體 + 少量筆意，但一致 —— 強度介於 0.102 與 0.103 之間，頓筆集中在主筆（0.103 的預設，保留供比較）
   subtle:
     brush_strength: 60
     brush_minor: 35
     dot_press_pct: 112
-  # 方向 2：楷意黑體 —— 連骨架一起改：橫左低右高、橫畫更細（對比加大）、主副筆分級、筆端更重
+  # 方向 2：楷意黑體 —— 連骨架一起改：橫左低右高、橫畫更細（對比加大）、主副筆分級、筆端更重。0.104 起為預設
   kaishu:
     brush_strength: 110
     brush_minor: 45

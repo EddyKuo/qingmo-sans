@@ -22,6 +22,8 @@ wght 250, e.g. 進) becomes zero-length there, so later small moves cannot turn 
 Safety net: a glyph whose transforms raise, or that would gain a self-intersecting contour in any
 master, is redone adding transforms one at a time and skipping only the ones that break it; skipped
 transforms are listed in <outdir>/transform-report.json. Large fonts are processed in parallel.
+After the transforms, long straight edges that are almost but not quite horizontal are levelled in every master
+(level_slight_slopes): FreeType fails to render them in overlap-flagged variable fonts.
 Every glyph also gets a contour-direction fix: a few base glyphs (〕 ］ ｝ ㄟ …) are drawn
 counter-clockwise; they are reversed in every master, decided on the reference master.
 """
@@ -169,7 +171,7 @@ def _init(names: list[str], params: dict) -> None:
     _PARAMS = params
 
 
-def _attempt(task, active, collapse=True):
+def _attempt(task, active, collapse=True, level=True):
     """以 active 這組 transform 改造一個字的所有 master；collapse 決定是否先收掉折返小刺。"""
     name, ref_points, end_pts, flags, masters, stem_scale, ref_w, upm = task
     struct_refs = []
@@ -198,7 +200,62 @@ def _attempt(task, active, collapse=True):
         results[w] = ([(round(x), round(y)) for x, y in points], list(ep), list(fl))
     if len({(tuple(ep), tuple(f & 1 for f in fl)) for _, ep, fl in results.values()}) != 1:
         raise ContractError(f"{name}: structural transform diverged across masters")
-    return results
+    # 拉平只處理改造過的字：母體自己的微斜邊（細字重的艹）拉平反而可能自交
+    return level_slight_slopes(results) if level and active else results
+
+
+SLIGHT_SLOPE = 150   # |dx| / |dy| 超過此值的長直線邊拉成水平
+SLIGHT_MIN_DX = 30   # font units
+
+
+def level_slight_slopes(results):
+    """幾乎水平的長直線邊在所有 master 拉成完全水平：各 master 的 dy 不全為 0，且某個 master 的
+    |dy| <= |dx| / SLIGHT_SLOPE（含 dy = 0），或 dy 的正負在 master 之間翻轉 —— 插值時都會經過微斜。
+
+    改造的移動疊加後（收筆微收、頓筆抬高、細腰、橫畫變細），偶爾讓一條長邊只斜 1–2 units。帶 OVERLAP_SIMPLE 的
+    可變字型由 FreeType 以 4 倍超取樣渲染，這種線在同一列像素裡橫跨上千格，超出光柵化器的記憶體池而渲染失敗
+    （raster overflow；857 units 長、斜 1 unit 的橫在 200 px 就失敗）。母體的長邊都是完全水平，沒有這個問題。
+    斜度翻轉的例子：二的上橫下緣，傾斜讓右端抬高（與字重無關）、收筆下壓隨筆寬增加，400 右端高 5、900 低 3。
+    相連的這類邊成一組，組內所有點取同一個 y（各 master 各自的平均）；每個 master 拉平同一批邊，插值時也不會出現微斜。
+    """
+    ws = list(results)
+    _, end_pts, flags = results[ws[0]]
+    parent = {}
+
+    def find(i):
+        while parent.get(i, i) != i:
+            i = parent[i]
+        return i
+
+    start = 0
+    for end in end_pts:
+        for i in range(start, end + 1):
+            j = i + 1 if i < end else start
+            if not (flags[i] & 1 and flags[j] & 1):
+                continue
+            dxs = [abs(results[w][0][j][0] - results[w][0][i][0]) for w in ws]
+            dys = [results[w][0][j][1] - results[w][0][i][1] for w in ws]
+            dx = min(dxs)
+            if dx < SLIGHT_MIN_DX or not any(dys):
+                continue
+            # 某個 master 幾乎水平，或斜度正負在 master 之間翻轉（插值時必經 0 附近）
+            if min(abs(d) for d in dys) <= dx / SLIGHT_SLOPE or min(dys) < 0 < max(dys):
+                parent[find(i)] = find(j)
+        start = end + 1
+    if not parent:
+        return results
+    groups = {}
+    for i in set(parent) | set(parent.values()):
+        groups.setdefault(find(i), []).append(i)
+    out = {}
+    for w, (pts, ep, fl) in results.items():
+        pts = list(pts)
+        for members in groups.values():
+            y = round(sum(pts[i][1] for i in members) / len(members))
+            for i in members:
+                pts[i] = (pts[i][0], y)
+        out[w] = (pts, ep, fl)
+    return out
 
 
 def _lerp(a, b, t):
@@ -255,7 +312,10 @@ def process_glyph(task):
     try:
         results = _attempt(task, _TRANSFORMS)
         if not _safe(task, results):
-            raise ContractError("new self-intersection")
+            results = _attempt(task, _TRANSFORMS, level=False)
+            if not _safe(task, results):
+                raise ContractError("new self-intersection")
+            skipped.append("level_slopes")
     except Exception as exc:  # noqa: BLE001 - 單字錯誤降級處理，不中斷整批
         errors.append(f"{type(exc).__name__}: {exc}")
         # 收折返小刺本身也可能造成插值交叉（噘：900 的短邊反向，壓平後 t=0.36–0.98 都交叉）
@@ -266,7 +326,7 @@ def process_glyph(task):
         for module in _TRANSFORMS:
             trial = active + [module]
             try:
-                ok = _safe(task, _attempt(task, trial, collapse))
+                ok = _safe(task, _attempt(task, trial, collapse, level=False))
             except Exception:  # noqa: BLE001
                 ok = False
             if ok:
@@ -274,6 +334,9 @@ def process_glyph(task):
             else:
                 skipped.append(module.__name__)
         results = _attempt(task, active, collapse)
+        if not _safe(task, results):
+            results = _attempt(task, active, collapse, level=False)
+            skipped.append("level_slopes")
     out = {w: (pts, ep, fl, pts != masters[w][0] or len(pts) != len(masters[w][0]))
            for w, (pts, ep, fl) in results.items()}
     return name, out, skipped, errors
