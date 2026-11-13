@@ -27,6 +27,7 @@ SHI = [(952, 466), (952, 389), (55, 389), (55, 466), (542, 839), (542, -80), (46
 END_PTS = [3, 7]
 FLAGS = [1] * 8
 PARAMS = load_spec()["style"]
+FLAT_PARAMS = dict(PARAMS, heng_tilt_deg=0)   # 不傾斜，便於檢查筆端的上下移動
 
 
 def ctx(ref=SHI, stem_scale=1.0):
@@ -204,7 +205,7 @@ def test_zhuo_template():
 
 
 def test_brush_heng_and_xuanzhen():
-    out, ends, flags = brush.transform_structure("uni5341", SHI, END_PTS, FLAGS, PARAMS, 400, ctx())
+    out, ends, flags = brush.transform_structure("uni5341", SHI, END_PTS, FLAGS, FLAT_PARAMS, 400, ctx())
     assert ends == [7, 16], ends   # 橫：兩端圓頭 + 兩個細腰；豎：起筆圓頭 + 懸針兩側各兩點
     shi = brush.plan(SHI, END_PTS, FLAGS, 1000, 1000)
     assert sorted(k for k, *_ in shi) == ["heng_head", "heng_tail", "shu_head", "tilt", "waist", "waist", "xuanzhen"], shi
@@ -217,7 +218,7 @@ def test_brush_heng_and_xuanzhen():
     assert len(tip) == 2 and math.isclose(abs(tip[0][0] - tip[1][0]), want, abs_tol=0.01), tip
     # 相同結構套到別的 master
     other = [(x, y * 1.1) for x, y in SHI]
-    _, ends2, flags2 = brush.transform_structure("uni5341", other, END_PTS, FLAGS, PARAMS, 900, ctx(stem_scale=1.4))
+    _, ends2, flags2 = brush.transform_structure("uni5341", other, END_PTS, FLAGS, FLAT_PARAMS, 900, ctx(stem_scale=1.4))
     assert ends2 == ends and flags2 == flags
 
 
@@ -237,6 +238,37 @@ def test_hanging_vertical_is_chuilu():
     kinds = {k for k, *_ in brush.plan(xia, [3, 7], [1] * 8, 1000, 1000)}
     assert "chuilu" in kinds and "xuanzhen" not in kinds, kinds
     assert "xuanzhen" in {k for k, *_ in brush.plan(SHI, END_PTS, FLAGS, 1000, 1000)}
+
+
+def test_brush_frame_corners():
+    # 口：冂 形外輪廓（左上起筆角 7、右上折角 0）＋ 藏在兩豎之間的下橫
+    kou = [(877, 735), (877, -51), (796, -51), (796, 660), (205, 660), (205, -55), (127, -55), (127, 735),
+           (851, 107), (851, 30), (162, 30), (162, 107)]
+    ends, flags = [7, 11], [1] * 12
+    assert sorted((k, i) for k, i, _ in brush.corners(kou, ends, flags, 1000)) == [("qi", 7), ("zhe", 0)]
+    out, ends2, fl2 = brush.transform_structure("uni53E3", kou, ends, flags, PARAMS, 400, ctx(ref=kou))
+    assert sum(1 for f in fl2 if not f & 1) >= 2, "兩個轉角都有外推的 off-curve"
+    assert fl2[0] & 1, "轉角是輪廓第一點時仍是 on-curve（第一點帶 OVERLAP_SIMPLE，變 off-curve 會讓 FreeType 渲染失敗）"
+    shoulder = next(p for p, f in zip(out, fl2) if not f & 1 and p[0] > 877)
+    assert shoulder[1] > 735, "折角往右上外推（肩）"
+    # 獨立的矩形筆畫沒有複合轉角
+    assert brush.corners(SHI, END_PTS, FLAGS, 1000) == []
+
+
+def test_neighbour_guard():
+    # 言：點的下端離橫只有幾 units —— 點的頓按與圓頭不能往下長（間距小於 GAP_MIN 時完全不外長）
+    dot = bar((200, 800), (225, 695), 60)
+    heng = [(400, 680), (400, 620), (40, 620), (40, 680)]
+    pts, ends = dot + heng, [3, 7]
+    ops = strokes.plan(pts, ends, [1] * 8, 1000, 1000)
+    assert any(k == "dot_round" for k, *_ in ops), ops
+    out, ends2, fl2 = strokes.transform_structure("x", pts, ends, [1] * 8, PARAMS, 400, ctx(ref=pts))
+    assert min(y for x, y in out[:ends2[0] + 1]) >= min(y for x, y in dot) - 0.5, "點不往下長"
+    # 橫畫變細：撇接在橫的下緣、在內收範圍內結束 → 下緣不動
+    pie = [(300, 621), (100, 400), (60, 420), (240, 621)]
+    pts2 = heng + pie
+    out2 = contrast.transform("x", pts2, [3, 7], [1] * 8, PARAMS, 400, ctx(ref=pts2))
+    assert out2[1][1] == 620 and out2[0][1] < 680, out2[:4]
 
 
 def test_profiles_override_style():

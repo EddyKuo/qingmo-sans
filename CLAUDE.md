@@ -25,7 +25,7 @@ make smoke    # 用 Lora（OFL）跑整條 pipeline，不需中文母體
 ```
 
 macOS / Linux 的 venv 直譯器是 `.venv/bin/python`，要傳給 make：`make all PY=.venv/bin/python`（Makefile 預設的 `PY` 是系統 `python3`）。
-風格版本：`config/spec.yaml` 的 `profiles` 覆蓋 `style`，`make ... PROFILE=kaishu` 選擇（預設 `style_profile`）；單元測試讀預設版本。
+風格版本：`config/spec.yaml` 的 `profiles` 覆蓋 `style`，`make ... PROFILE=subtle` 選擇（預設 `style_profile`，0.104 起為 `kaishu`）；單元測試讀預設版本。
 Makefile 用標準 tab 縮排，不要改回 `.RECIPEPREFIX`，因為 macOS 內建的 GNU Make 3.81 不支援。
 
 Windows 沒有 `make`：依 `Makefile` 順序直接執行 `.venv/Scripts/python scripts/...`，並設定 `PYTHONIOENCODING=utf-8`。
@@ -48,7 +48,7 @@ Windows 沒有 `make`：依 `Makefile` 順序直接執行 `.venv/Scripts/python 
 - Transform 只作用於 CJK 統一漢字；拉丁、標點、注音沿用母體
 - 「改哪些點」一律在參考 master（wght 400）上判斷，再套到每個 master；不可在各 master 各自判斷，否則點相容會壞
 - Point transform：`transform(...) -> points`，點數不得改變
-- Structural transform（`strokes`、`corners`）：`transform_structure(...) -> (points, end_pts, flags)`，
+- Structural transform（`strokes`、`brush`、`corners`）：`transform_structure(...) -> (points, end_pts, flags)`，
   所有 master 必須做相同的結構變更，排在所有 point transform 之後；pipeline 會依序傳入「套用過前面結構性 transform 的參考輪廓」
 - 新增的點不可帶 `OVERLAP_SIMPLE`（0x40）旗標，否則 OTS 會拒絕
 - VF 沿用母體 `avar` 字重曲線（`build_vf.py` 的 axis map），不要移除
@@ -66,6 +66,7 @@ Windows 沒有 `make`：依 `Makefile` 順序直接執行 `.venv/Scripts/python 
 | 單元測試、smoke | `make test`、`make smoke` |
 | fontbakery（目標 0 FAIL；static 與 VF 分開跑） | `fontbakery check-universal --config config/fontbakery.yaml fonts/static/*.ttf` |
 
+大尺寸渲染：`python scripts/qa/render.py "fonts/variable/QingmoSansTC[wght].ttf"`（500 px 四個字重約 3 分鐘；列出 FreeType 畫不出、母體卻畫得出的字。點相容、自交、fontbakery 都抓不到這類問題，改了會移動長邊或插入曲線的規則後要跑）。
 人工抽檢校樣：`python scripts/qa/proof_sheet.py fonts/static/QingmoSansTC-Regular.ttf`（輸出到 `build/proof/`）。
 逐字檢查字表：`make fontmap` → `build/proof/font-map.html`（晴墨與母體內嵌、可疊圖比對、鍵盤標記 OK / 有問題、匯出清單）。
 

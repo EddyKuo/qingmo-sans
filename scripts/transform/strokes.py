@@ -27,13 +27,19 @@ cap 的朝向 = 從筆身（前後段遠端的中點）指向 cap 中點的方�
 強度 s（0–1）：門檻附近線性漸強，避免同一個部件因為差 1° 而一個字有、一個字沒有（例：金字旁的提 11–14°）。
 模板參數依 s 往「不變」內插：寬度比例 100 + (pct - 100) × s，圓頭凸出 × s。
 
+鄰近筆畫保護（0.104）：在參考輪廓上量，
+- 收細（點、提、長點的尖端、撇、鉤尖）：筆端周圍 1.5 倍端寬內的輪廓碰到其他筆畫（JOINT 內）就不收，
+  否則接點會脫開（改、歡的撇尖接在別的筆畫側邊）
+- 外長（點與提的頓按、圓頭，長點的尾端，捺的尖端）：以扇形多方向量到其他筆畫的距離，外長後的間距不小於
+  Neighbourhood.room_factor 的下限，否則會與鄰近筆畫黏成一塊（言字旁的點碰到下面的橫）
+
 所有判斷都在參考輪廓上做，每個 master 套用相同的點操作，點相容由 pipeline 驗證。
 """
 from __future__ import annotations
 
 import math
 
-from geometry import contour_ranges
+from geometry import Neighbourhood, contour_of, contour_ranges
 
 MAX_STEM = 0.16        # × UPM
 DOT_MAX_LEN = 0.42     # × UPM，右點（左上→右下）的最大長度（永的首點約 0.40）
@@ -54,6 +60,8 @@ HOOK_MIN_SEGS = 6             # 鉤所在輪廓的最少段數；獨立的 4 段
 HOOK_LEFT = 160               # 度，|角度| >= 此值為朝左的鉤
 HOOK_RIGHT = (20, 100)        # 度，朝右上的鉤
 HOOK_TURN = -0.5              # cap 前後切線的內積上限（< -0.5 即折返 > 120°）
+JOINT = 4.0                   # font units，視為「碰到」其他筆畫的距離（母體有 2–3 units 的細縫，看起來是連著的）
+SHRINK = ("dot_tip", "ti_tip", "changdian_tip", "pie", "hook")
 
 
 def segments(flags, rng):
@@ -280,11 +288,16 @@ def transform_structure(glyph_name, points, end_pts, flags, params, wght, ctx):
 
     pts = list(points)
     rounds = {}   # cap 起點 → (cap, 圓頭凸出 × 端寬 %)
+    hood = Neighbourhood(ctx["ref"], end_pts, flags)
+    ops = [(kind, seg, k * _room(hood, ctx["ref"], end_pts, kind, seg, k, params)) for kind, seg, k in ops]
     for kind, seg, k in ops:
+        if k <= 0:
+            continue
         if kind == "pie":
             _pie(pts, seg, params, upm)
         elif kind == "na":
-            _na(pts, seg, params)
+            _na(pts, seg, dict(params, na_tip_out_pct=params["na_tip_out_pct"] * k,
+                               na_tip_rise_pct=params["na_tip_rise_pct"] * k))
         elif kind == "hook":
             _hook_apply(pts, seg, params, upm)
         elif kind == "dot_tip":
@@ -323,3 +336,33 @@ def transform_structure(glyph_name, points, end_pts, flags, params, wght, ctx):
                 new_flags.append(0)
         new_ends.append(len(new_pts) - 1)
     return new_pts, new_ends, new_flags
+
+
+def _room(hood, ref, end_pts, kind, seg, k, params):
+    """鄰近筆畫保護：回傳強度倍率（0 = 不套用，1 = 完整）。"""
+    cap = seg[0] if kind == "hook" else seg
+    rng = contour_of(end_pts, cap[0])
+    a, b = ref[cap[0]], ref[cap[-1]]
+    c = math.dist(a, b) or 1.0
+    mid = ((a[0] + b[0]) / 2, (a[1] + b[1]) / 2)
+    if kind in SHRINK:
+        return 0.0 if hood.touching(rng, mid, 1.5 * c, JOINT) else 1.0
+    ux, uy = (b[0] - a[0]) / c, (b[1] - a[1]) / c
+    need = []          # (起點, 方向, 外長量)
+    if kind == "na":
+        ai, bi = (cap[-1], cap[0]) if ref[cap[-1]][1] < ref[cap[0]][1] else (cap[0], cap[-1])
+        (ax, ay), (bx, by) = ref[ai], ref[bi]
+        dx, dy = params["na_tip_out_pct"] / 100 * c, ay + params["na_tip_rise_pct"] / 100 * c - by
+        d = math.hypot(dx, dy) or 1.0
+        need += hood.fan((bx, by), (dx / d, dy / d), d, angles=(-25, 0, 25))
+    else:
+        round_pct, press = {
+            "dot_round": (params["dot_round_pct"], params["dot_press_pct"]),
+            "ti_head": (params["ti_round_pct"], params["ti_head_pct"]),
+            "changdian_press": (params["changdian_round_pct"], params["changdian_press_pct"]),
+        }[kind]
+        need += hood.fan(mid, (-uy, ux), c * round_pct / 100 * k)      # 圓頭：左法向為外側
+        grow = c * (_eased(press, k) / 100 - 1) / 2
+        if grow > 0:
+            need += hood.fan(b, (ux, uy), grow, angles=(-30, 0, 30)) + hood.fan(a, (-ux, -uy), grow, angles=(-30, 0, 30))
+    return hood.room_factor(need, rng)

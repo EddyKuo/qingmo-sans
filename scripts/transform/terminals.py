@@ -6,15 +6,18 @@
 - 豎畫上端（填色在下）= 起筆：右角向下移 w * tan(entry_cut_deg)
 - 橫畫右端、豎畫下端 = 收筆：端緣兩點各向中線收 exit_taper_pct / 2，總寬縮 exit_taper_pct
 w 為端緣在當前 master 上的長度（= 筆寬）。只移動既有點，點數不變；所有移動都朝填色內側，不會長出筆畫外。
+接點保護（0.104）：參考輪廓上有其他筆畫碰到要移動的角點（半徑 JOINT 內），且移動後的位置不在那個筆畫裡，
+這個角點不動 —— 筆端往內收會讓兩筆脫開。
 """
 from __future__ import annotations
 
 import math
 
-from geometry import contour_of, inside, inside_own, neighbours
+from geometry import Neighbourhood, contour_of, inside, inside_own, neighbours
 
 MAX_STEM = 0.16   # × UPM
 FLAT = 1.0
+JOINT = 2.0       # font units，視為「碰到」的距離
 
 
 def _axis(a, b):
@@ -73,23 +76,39 @@ def transform(glyph_name, points, end_pts, flags, params, wght, ctx):
     tan = math.tan(math.radians(params["entry_cut_deg"]))
     taper = params["exit_taper_pct"] / 100
     out = list(points)
-    for kind, i, j in stroke_ends(ctx["ref"], end_pts, flags, ctx["upm"]):
+    ref = ctx["ref"]
+    ends = stroke_ends(ref, end_pts, flags, ctx["upm"])
+    hood = Neighbourhood(ref, end_pts, flags) if ends else None
+    moves = []
+    for kind, i, j in ends:
         a, b = out[i], out[j]
         w = math.dist(a, b)
         if kind == "h_entry":
             k = i if a[1] < b[1] else j            # 下角
-            out[k] = (out[k][0] + w * tan, out[k][1])
+            moves.append((k, w * tan, 0.0))
         elif kind == "v_entry":
             k = i if a[0] > b[0] else j            # 右角
-            out[k] = (out[k][0], out[k][1] - w * tan)
+            moves.append((k, 0.0, -w * tan))
         elif kind == "h_exit":
             s = w * taper / 2
             lo, hi = (i, j) if a[1] < b[1] else (j, i)
-            out[lo] = (out[lo][0], out[lo][1] + s)
-            out[hi] = (out[hi][0], out[hi][1] - s)
+            moves += [(lo, 0.0, s), (hi, 0.0, -s)]
         else:                                      # v_exit
             s = w * taper / 2
             lo, hi = (i, j) if a[0] < b[0] else (j, i)
-            out[lo] = (out[lo][0] + s, out[lo][1])
-            out[hi] = (out[hi][0] - s, out[hi][1])
+            moves += [(lo, s, 0.0), (hi, -s, 0.0)]
+    for k, dx, dy in moves:
+        if _joint(hood, ref, end_pts, k, dx, dy):
+            continue
+        out[k] = (out[k][0] + dx, out[k][1] + dy)
     return out
+
+
+def _joint(hood, ref, end_pts, k, dx, dy):
+    """參考輪廓上，角點 k 碰到其他筆畫，且往內移動 (dx, dy) 後離開該筆畫。"""
+    rng = contour_of(end_pts, k)
+    x, y = ref[k]
+    near = set()
+    for ox, oy in ((JOINT, 0), (-JOINT, 0), (0, JOINT), (0, -JOINT)):
+        near |= hood.owners((x + ox, y + oy), rng)
+    return bool(near - hood.owners((x + dx, y + dy), rng))
